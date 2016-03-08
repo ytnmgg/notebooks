@@ -1,9 +1,8 @@
 # Contents
 
-<!-- -->
 1. [ftp](#ftp)
 2. [centos mail](#centos-mail)
-<!-- -->
+
 ---
 # FTP
 * install the vsftpd
