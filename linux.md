@@ -36,6 +36,7 @@ no_anon_password=YES
 sestatus
 setenforce 0
 ```
+
   + Revise `/etc/selinux/config`
 ```bash
 SELINUX=enforcing
