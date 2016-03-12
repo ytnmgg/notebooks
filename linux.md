@@ -1,9 +1,56 @@
 # Contents
 
-
+1. [httpd](#httpd)
 1. [bind](#bind)
 2. [ftp](#ftp)
 3. [centos mail](#centos-mail)
+4. [ssh](#ssh)
+---
+# httpd
+
+* disable firewall
+```bash
+iptables -F
+```
+* disable SELinux
+```bash
+sestatus -v
+```
+if this line is not:
+```bash
+Current mode:                   permissive
+```
+use this command:
+```bash
+setenforce 0
+```
+then disable it permanently by editing `/etc/selinux/config`
+```bash
+SELINUX=disabled
+```
+* export the log folder `/opt/cft_execution_logs/mrqe/`
+```bash
+cd /var/www
+mkdir logs
+cd logs
+ln -s /opt/cft_execution_logs/mrqe/ mrqe
+```
+* install httpd
+```bash
+yum -y install httpd
+rm -f /etc/httpd/conf.d/welcome.conf
+```
+* revise config file of httpd `/etc/httpd/conf/httpd.conf` to output `/var/www/logs`
+```bash
+DocumentRoot "/var/www/logs"
+<Directory "/var/www/logs">
+    Options All Indexes FollowSymLinks
+    AllowOverride None
+    # Allow open access:
+    Require all granted
+</Directory>
+```
+
 ---
 # BIND
 
@@ -123,3 +170,39 @@ set from=ytnmgg@126.com  smtp=smtp.126.com
 set smtp-auth-user=ytnmgg@126.com  smtp-auth-password=*** smtp-auth=login
 ```
 ***
+
+# ssh
+ssh login from Host A to Host B without password
+* First log in on A as user a and generate a pair of authentication keys. Do not enter a passphrase:
+```bash
+a@A:~> ssh-keygen -t rsa
+```
+Generating public/private rsa key pair.
+* Enter file in which to save the key (`/home/a/.ssh/id_rsa`):
+Created directory `/home/a/.ssh`.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in `/home/a/.ssh/id_rsa`.
+Your public key has been saved in `/home/a/.ssh/id_rsa.pub`.
+The key fingerprint is:
+3e:4f:05:79:3a:9f:96:7c:3b:ad:e9:58:37:bc:37:e4 a@A
+* Now use ssh to create a directory `~/.ssh` as user b on B. (The directory may already exist, which is fine):
+```bash
+a@A:~> ssh b@B mkdir -p .ssh
+b@B's password:
+```
+Finally append a's new public key to b@B:`.ssh/authorized_keys` and enter b's password one last time:
+```bash
+a@A:~> cat .ssh/id_rsa.pub | ssh b@B 'cat >> .ssh/authorized_keys'
+b@B's password:
+```
+From now on you can log into B as b from A as a without password:
+```bash
+a@A:~> ssh b@B
+```
+A note from one of our readers: Depending on your version of SSH you might also have to do the following changes:
+>* Put the public key in .ssh/authorized_keys2
+>* Change the permissions of .ssh to 700
+>* Change the permissions of .ssh/authorized_keys2 to 640
+
+Automatos login to SPs:
