@@ -205,4 +205,24 @@ A note from one of our readers: Depending on your version of SSH you might also 
 >* Change the permissions of .ssh to 700
 >* Change the permissions of .ssh/authorized_keys2 to 640
 
-Automatos login to SPs:
+### Automatos login to SPs:
+
+Add following to  `/etc/ssh/ssh_config`:
+
+```bash
+# Used for password-less access to DEBUG builds
+IdentityFile /c4shares/Public/ssh/id_rsa.root
+# IdentityFile /sobo-c4shares/c4shares/Public/ssh/id_rsa.root
+
+# For anything that looks like an SP, default to root and don't
+# complain about the host key changing
+Host sim64-* sentry* BC* khsim* *-spa *-spb *-cpa *-cpb
+    User root
+    StrictHostKeyChecking no
+
+# If we use an IP address, it might not be an SP, so don't default to root,
+# but at least don't complain about the host key changing
+Host 10.*
+    StrictHostKeyChecking no
+
+```
