@@ -247,3 +247,12 @@ open 'settings', goto 'Startup', goto 'Tasks', create a new task and add followi
 ```bash
 -new_console:t:10.141.32.223"%CMDER_ROOT%\vendor\git-for-windows\usr\bin\ssh" root@10.141.32.223
 ```
+
+To create default Cmder, goto 'Startup', goto 'Tasks', create a new task of:
+```bash
+cmd /k "%ConEmuDir%\..\init.bat"  -new_console:d:"C:\WL_Ducuments":t:Cmder
+```
+and in Task parameters form, input:
+```bash
+/icon "C:\WL_Tools\cmder\icons\cmder.ico"
+```
