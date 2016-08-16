@@ -5,9 +5,10 @@
 2. [ftp](#ftp)
 3. [centos mail](#centos-mail)
 4. [ssh](#ssh)
+5. [vim](#vim)
+6. [cmder](#cmder)
 ---
-# httpd
-
+# httpd <a name="httpd"></a>
 * disable firewall
 ```bash
 iptables -F
@@ -52,7 +53,7 @@ DocumentRoot "/var/www/logs"
 ```
 
 ---
-# BIND
+# BIND <a name="bind"></a>
 
 * isntall bind
 ```bash
@@ -101,7 +102,7 @@ named-checkzone ytnmgg.com /var/named/ytnmgg.com.zone
 ```
 ---
 
-# FTP
+# FTP <a name="ftp"></a>
 
 * install the vsftpd
 ```bash
@@ -148,7 +149,7 @@ chown ftp /var/ftp/pub
 service vsftpd restart
 ```
 ---
-# Centos Mail
+# Centos Mail <a name="centos-mail"></a>
 ```markdown
 This file describe some detail to use 'mail' command in Centos7
 ```
@@ -171,7 +172,7 @@ set smtp-auth-user=ytnmgg@126.com  smtp-auth-password=*** smtp-auth=login
 ```
 ***
 
-# ssh
+# ssh <a name="ssh"></a>
 ssh login from Host A to Host B without password
 * First log in on A as user a and generate a pair of authentication keys. Do not enter a passphrase:
 ```bash
@@ -225,4 +226,24 @@ Host sim64-* sentry* BC* khsim* *-spa *-spb *-cpa *-cpb
 Host 10.*
     StrictHostKeyChecking no
 
+```
+# VIM <a name="vim"></a>
+put the following code in `~/.vimrc`
+```bash
+set nocompatible            " 关闭 vi 兼容模式
+syntax on                   " 自动语法高亮
+set number                  " 显示行号
+set ruler                   " 打开状态栏标尺
+set shiftwidth=4            " 设定 << 和 >> 命令移动时的宽度为 4
+set softtabstop=4           " 使得按退格键时可以一次删掉 4 个空格
+set tabstop=4               " 设定 tab 长度为 4
+set expandtab               " 设置用空格替换tab
+set smartindent             " 开启新行时使用智能自动缩进"
+```
+
+# cmder <a name="cmder"></a>
+To create a new task for opening table and ssh to a host,
+open 'settings', goto 'Startup', goto 'Tasks', create a new task and add following:
+```bash
+-new_console:t:10.141.32.223"%CMDER_ROOT%\vendor\git-for-windows\usr\bin\ssh" root@10.141.32.223
 ```
