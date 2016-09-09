@@ -7,6 +7,7 @@
 4. [ssh](#ssh)
 5. [vim](#vim)
 6. [cmder](#cmder)
+7. [hd](#hd)
 ---
 # httpd <a name="httpd"></a>
 * disable firewall
@@ -255,4 +256,46 @@ cmd /k "%ConEmuDir%\..\init.bat"  -new_console:d:"C:\WL_Ducuments":t:Cmder
 and in Task parameters form, input:
 ```bash
 /icon "C:\WL_Tools\cmder\icons\cmder.ico"
+```
+
+# hd <a name="hd"></a>
+hardware related commands:
+```bash
+lsblk
+lscpu
+lspci
+lshw
+df
+du
+free
+zfs
+targetcli
+dmesg
+sq_inq
+
+```
+
+source filename 与 sh filename 及./filename执行脚本的区别在那里呢？
+1.当shell脚本具有可执行权限时，用sh filename与./filename执行脚本是没有区别得。./filename是因为当前目录没有在PATH中，所有"."是用来表示当前目录的。
+2.sh filename 重新建立一个子shell，在子shell中执行脚本里面的语句，该子shell继承父shell的环境变量，但子shell新建的、改变的变量不会被带回父shell，除非使用export。
+3.source filename：这个命令其实只是简单地读取脚本里面的语句依次在当前shell里面执行，没有建立新的子shell。那么脚本里面所有新建、改变变量的语句都会保存在当前shell里面。
+
+Linux变量 分 shell变量(set)，用户变量(env)， shell变量包含用户变量，export是一种命令工具，显示当前导出成用户变量的shell变量.可以使用unset命令来清除变量
+
+/etc/profile: 用来设置系统环境参数，如$PATH. 对系统内所有用户生效。当第一个用户登录时,该文件被执行
+/etc/bashrc:  这个文件设置系统bash shell相关的东西，对系统内所有用户生效。为每一个运行bash shell的用户执行此文件.当bash shell被打开时,该文件被读取。
+~/.bash_profile: 用户登录时被读取，用来设置一些环境变量，功能和/etc/profile 类似，但是这个是针对当前用户来设定的
+~/.bashrc: 启动新的shell时被读取，作用类似于/etc/bashrc, 只是针对用户自己而言，不对其他用户生效。
+另外/etc/profile中设定的变量(全局)的可以作用于任何用户,而~/.bashrc等中设定的变量(局部)只能继承/etc/profile中的变量,他们是"父子"关系.
+~/.bash_profile 是交互式、login 方式进入 bash 运行的，意思是只有用户登录时才会生效。
+
+~/.bashrc 是交互式 non-login 方式进入 bash 运行的，用户不一定登录，只要以该用户身份运行命令行就会读取该文件。
+
+
+how to find host name from IP with out login to the host
+use one of the following command:
+```bash
+nslookup 10.35.83.49
+host 10.35.83.49
+dig -x 10.35.83.49
 ```
