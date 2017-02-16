@@ -8,6 +8,8 @@
 5. [vim](#vim)
 6. [cmder](#cmder)
 7. [hd](#hd)
+8. [expect](#expect)
+9. [Deploy Nginx/Gunicorn(uwsgi)/Flask](#deploy)
 ---
 # httpd <a name="httpd"></a>
 * disable firewall
@@ -299,3 +301,314 @@ nslookup 10.35.83.49
 host 10.35.83.49
 dig -x 10.35.83.49
 ```
+# expect <a name="expect"></a>
+following is an example for using expect in Linux, we need two scripts,
+### one for bash (test.sh):
+```bash
+#!/bin/sh
+# This script could build test env in SUSE.
+
+INSTALL="zypper install -y"
+IP="10.109.82.124"
+USERNAME="root"
+PASSWORD="dangerous"
+
+# Get zypp repo, RPC, naviseccli, uemcli
+mkdir /etc/zypp/repos.d/backup
+mv /etc/zypp/repos.d/*.repo /etc/zypp/repos.d/backup/
+
+expect scp.exp $IP $USERNAME $PASSWORD /etc/zypp/repos.d/11_4.repo /etc/zypp/repos.d/ 
+expect scp.exp $IP $USERNAME $PASSWORD /root/build_test_env/share/* ./ 
+
+# Java insatllation
+$INSTALL java*openjdk
+
+# Installation
+tar -zxvf Autom*.tar.gz
+cd Automatos-RPC/bat && ./installDaemon.sh
+cd -
+
+$INSTALL Navi*.rpm
+$INSTALL Unisphe*.rpm
+
+echo "export PATH=\$PATH:/opt/Navisphere/bin" >> /etc/bash.bashrc
+
+export PATH=$PATH:/opt/Navisphere/bin
+```
+### another one for expect (scp.exp):
+```bash
+#!/usr/bin/expect
+set timeout 10
+set host [lindex $argv 0]
+set username [lindex $argv 1]
+set password [lindex $argv 2]
+set src_file [lindex $argv 3]
+set dest_file [lindex $argv 4]
+spawn scp -o StrictHostKeyChecking=no $username@$host:$src_file $dest_file
+expect "*assword:" { send "$password\n" }
+expect "100%"
+expect eof
+```
+# Deploy Nginx/Gunicorn(uwsgi)/Flask <a name="deploy"></a>
+---
+## summary:
+this project will be deployed in the way of classic three tier architecture.
+* Nginx (public facing web server, tier-1)
+* Gunicorn (internal HTTP application server, tier-2)
+* Flask (data server, tier-3)
+
+and we also need a tool to manage gunicorn processes
+* Supervisor (process control and monitor)
+
+## pre setup:
+```bash
+pip install gunicorn
+pip2 install supervisor                   # since supervisor doesn't support python3 for now
+yum install nginx
+
+# make supervisor default configuration file
+cd /root/ctee_env/ctee_env && echo_supervisord_conf > supervisor.conf   
+```
+
+## config supervisor:
+edit the default config file: `/root/ctee_env/ctee_env/supervisor.conf`, add following stuff 
+to the end of it, notice that the first line of [program:api], 'api' is the name of 'api.py', 
+and 'app' is the object name in api.py (app = Flask(\_\_name\_\_))
+```bash
+[program:api]
+command=/usr/bin/gunicorn -w4 -b0.0.0.0:5002 api:app               ; start gunicorn application
+directory=/root/ctee_env/ctee_env                                  ; folder of project
+startsecs=0                                                        
+stopwaitsecs=0                                                     
+autostart=false                                                    
+autorestart=false                                                  
+stdout_logfile=/root/ctee_env/logs/gunicorn.log                    ; log location
+stderr_logfile=/root/ctee_env/logs/gunicorn.err
+```
+if using uwsgi instead of Gunicorn, need to start uwsgi in supervisor instead of Gunicorn:
+```bash
+command=uwsgi /root/config.ini
+```
+and then build a uwsgi config file (config.ini):
+```bash
+[uwsgi]
+
+# uwsgi address and port
+socket = 0.0.0.0:8003
+
+# folder where website startup python file locates
+chdir = /root/www/EasyJenkins2.0
+
+# python startup file
+wsgi-file = webStart.py
+
+# python Flask variable to start application
+callable = app
+
+processes = 4
+
+threads = 2
+
+# monitor address
+stats = 0.0.0.0:9193
+logto = /tmp/errlog1
+```
+
+## control supervisor:
+execute following commands should in the same folder of `supervisor.conf`
+```bash
+supervisord -c supervisor.conf                             # start supervisor according to config file
+supervisorctl -c supervisor.conf reload                    # need to reload config file after modify it
+supervisorctl -c supervisor.conf status                    # check satus of supervisor
+supervisorctl -c supervisor.conf start [all]|[appname]     # start process managed by supervisor
+supervisorctl -c supervisor.conf stop [all]|[appname]      # stop process managed by supervisor
+```
+## config nginx:
+edit `/etc/nginx/nginx.conf`, change content of 'server' to make nginx connect to gunicorn
+```bash
+upstream app_server {
+         # fail_timeout=0 means we always retry an upstream even if it failed
+         # to return a good HTTP response
+
+         # for UNIX domain socket setups
+         # server unix:/tmp/gunicorn.sock fail_timeout=0;
+
+         # for a TCP configuration
+        server 127.0.0.1:5002 fail_timeout=0;
+}
+
+server {
+        listen       5001 default_server;
+        # listen       [::]:80 default_server;
+        server_name  _;
+        #root         /usr/share/nginx/html;
+
+        # Load configuration files for the default server block.
+        # include /etc/nginx/default.d/*.conf;
+
+        location / {
+            # checks for static file, if not found proxy to app
+            try_files $uri @proxy_to_app;
+        }
+
+        location @proxy_to_app {
+            proxy_pass http://app_server;
+            proxy_set_header Host $host;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            # we don't want nginx trying to do something clever with
+            # redirects, we set the Host: header above already.
+            proxy_redirect off;
+}
+```
+
+### add another config example from EasyJenkins:
+```bash
+
+#user  nobody;
+worker_processes  1;
+
+#error_log  logs/error.log;
+#error_log  logs/error.log  notice;
+#error_log  logs/error.log  info;
+
+#pid        logs/nginx.pid;
+
+
+events {
+    worker_connections  1024;
+}
+
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+    #                  '$status $body_bytes_sent "$http_referer" '
+    #                  '"$http_user_agent" "$http_x_forwarded_for"';
+
+    #access_log  logs/access.log  main;
+
+    sendfile        on;
+    #tcp_nopush     on;
+
+    #keepalive_timeout  0;
+    keepalive_timeout  65;
+
+    #gzip  on;
+
+    server {
+        #listen       8880;
+        #listen       8888 ssl;
+        listen       8899 ssl;
+        server_name  localhost;
+
+        ssl_certificate      /usr/local/nginx/conf/ssl/server.crt;
+        ssl_certificate_key  /usr/local/nginx/conf/ssl/server.key;
+
+        ssl_session_cache    shared:SSL:1m;
+        ssl_session_timeout  5m;
+
+        ssl_ciphers  HIGH:!aNULL:!MD5;
+        ssl_prefer_server_ciphers  on;
+        
+        location /logs/ {
+           alias       /opt/CTEE_logs/;
+           autoindex   on;
+           autoindex_exact_size off;
+       }
+        
+        location / {
+        include      uwsgi_params;
+        uwsgi_pass   0.0.0.0:8001;
+        uwsgi_param UWSGI_CHDIR  /root/www/CTEEAS;
+        uwsgi_param UWSGI_SCRIPT webStart.py;
+        uwsgi_read_timeout 300;    
+        #index  index.html index.htm;
+        }
+       
+       error_page 502 502 503 504 /502.html;
+        location = /500.html {
+
+            root  /root/www/CTEEAS/templates;
+
+        }
+       # location / {
+       #    root   html;
+       #    index  index.html index.htm;
+       # }
+    }
+     
+    server {
+        #listen       8899 ssl;
+        listen       8880;
+        listen       8888 ssl;
+        server_name  localhost;
+
+        ssl_certificate      /usr/local/nginx/conf/ssl/server.crt;
+        ssl_certificate_key  /usr/local/nginx/conf/ssl/server.key;
+
+        ssl_session_cache    shared:SSL:1m;
+        ssl_session_timeout  5m;
+
+        ssl_ciphers  HIGH:!aNULL:!MD5;
+        ssl_prefer_server_ciphers  on;
+
+        location /logs/ {
+           alias       /opt/CTEE_logs/;
+           autoindex   on;
+           autoindex_exact_size off;
+       }
+
+
+        location / {
+        include      uwsgi_params;
+        uwsgi_pass   0.0.0.0:8003;
+        uwsgi_param UWSGI_CHDIR  /root/www/EasyJenkins2.0;
+        uwsgi_param UWSGI_SCRIPT webStart.py;
+        uwsgi_read_timeout 300;
+       }
+    }
+    server {
+        listen       9999 ssl;
+        server_name  localhost;
+
+        ssl_certificate      /usr/local/nginx/conf/ssl/server.crt;
+        ssl_certificate_key  /usr/local/nginx/conf/ssl/server.key;
+
+        ssl_session_cache    shared:SSL:1m;
+        ssl_session_timeout  5m;
+
+        ssl_ciphers  HIGH:!aNULL:!MD5;
+        ssl_prefer_server_ciphers  on;
+
+         location / {
+        include      uwsgi_params;
+        uwsgi_pass   0.0.0.0:8002;  
+        uwsgi_param UWSGI_CHDIR  /root/www/CTEEAS2/CTEEAS; 
+        uwsgi_param UWSGI_SCRIPT webStart.py; 
+        uwsgi_read_timeout 300;
+        #index  index.html index.htm;
+        }
+
+       error_page 502 502 503 504 /502.html;
+        location = /500.html {
+
+            root  /root/www/CTEEAS/templates;
+
+        }
+       # location / {
+       #    root   html;
+       #    index  index.html index.htm;
+       # }
+    }
+
+}
+
+```
+
+then restart nginx service and the processes in supervisor:
+```bash
+service nginx restart
+supervisorctl -c supervisor.conf start all
+ ```
