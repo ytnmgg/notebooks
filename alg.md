@@ -3,6 +3,7 @@
 1. [后缀法解多项式](#postfix)
 2. [汉诺塔](#hanoi)
 3. [动态规划](#Dynamic_Programming)
+4. [Merge/Quick 排序](#sort)
 ---
 # 后缀法解多项式 <a name="postfix"></a>
 * 构建Stack类：
@@ -162,3 +163,53 @@ if __name__ == '__main__':
     coinValue = [1,5,10,25]                                                                      
     print dpCalCoins(coinValue, k, {})                         
 ```
+---
+# Merge/Quick 排序 <a name="sort"></a>
+* Merge排序，思路为递归，将数组分为两段，假设左段与右段都为排序好的序列（典型递归思想），则通过Merge可得到最终排序好的序列
+```python
+def do_sort(l):
+    if len(l) > 1: # 递归结束条件，序列长度大于1
+        # 将序列分为左右两段
+        mid = len(l) // 2
+        left = l[:mid]
+        right = l[mid:]
+        
+        # 左右两段分别排序
+        do_sort(left)                        
+        do_sort(right)                       
+
+        # 把左右两段Merge成最终排序完成的序列
+        i=0                                  
+        j=0                                  
+        k=0                                  
+        while i<len(left) and j<len(right):
+            # 分别从左右两段选择，较大的放入最终序列
+            if left[i] < right[j]:           
+                l[k] = right[j]              
+                j += 1                       
+            else:                            
+                l[k] = left[i]               
+                i += 1                       
+            k += 1                           
+        
+        # 上面的while循环完成后，只有左段或者右段序列有剩余，
+        # 不可能都有剩余，故下面2个while只会有一个执行
+        
+        # 防止左段序列还有剩余，依次放入最终序列
+        while i<len(left):                   
+            l[k] = left[i]                   
+            i += 1                           
+            k += 1                           
+            
+        # 防止右段序列还有剩余，依次放入最终序列
+        while j<len(right):                  
+            l[k] = right[j]                  
+            j += 1                           
+            k += 1                           
+                                             
+if __name__ == "__main__":                   
+    l = [2,3,1,5,4,6]                        
+    do_sort(l)                               
+    print(l)
+```
+* Quick排序
