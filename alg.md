@@ -212,4 +212,48 @@ if __name__ == "__main__":
     do_sort(l)                               
     print(l)
 ```
-* Quick排序
+* Quick排序, 思路为找出pivot位置，使得其左边子序列均大于它，右边均小于它，然后再对子序列进行递归. 
+总体思路类似于Merge排序，都是分治，但是Quick排序在原序里操作，较Merge排序节省空间，时间复杂度均为nlogn
+```python
+# first 为序列左边界，last为序列右边界
+# 初始值为待排序序列的左右边界，随着递归变化
+def do_sort(l,first,last):                       
+    # 递归结束条件，序列左边界小于右边界，实际上等价于Merge排序中的子序列长度大于1
+    if first < last: 
+        mid = partition(l,first,last) # 找出分界点
+        do_sort(l,first,mid-1) # 对左边子序列排序
+        do_sort(l,mid+1,last)# 对右边子序列排序
+                                                 
+def partition(l,first,last):                     
+    pivot = l[first] # 将分界值（pivot）设置为第一个数
+    head = first + 1 # 除去pivot的剩余序列的头指针
+    tail = last # 除去pivot的剩余序列的尾指针
+                                                 
+    done = False                                 
+    while not done:
+        # 移动头指针，直到发现小于pivot的元素，或者头尾指针交替
+        while head <= tail and l[head] >= pivot: 
+            head += 1     
+        
+        # 移动尾指针，直到发现大于pivot的元素，或者头尾指针交替
+        while head <= tail and l[tail] <= pivot: 
+            tail -= 1                            
+        
+        # 如果两个while循环后head仍然小于tail
+        # 则表示head处的值小于pivot，tail处的值大于pivot，此时交换这两个值
+        if head < tail:                          
+            l[head], l[tail] = l[tail], l[head]  
+        # 如果指针交替，表示指针左边全部大于pivot，右边全部小于pivot
+        # 则结束循环，将pivot与右指针的值交换，交换右指针而不是左指针
+        # 的原因是指针交替，右指针在左指针左边，它指向的值是左指针曾经指向
+        # 过的，可以保证其值大于pivot，可以将其与pivot交换
+        else:                                    
+            l[tail], l[first] = l[first], l[tail]
+            done = True                          
+    return tail                                  
+
+if __name__ == "__main__":                       
+    l = [2,3,1,5,4,6]                            
+    do_sort(l, 0, len(l)-1)                      
+    print(l)  
+```    
