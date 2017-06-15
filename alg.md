@@ -4,6 +4,8 @@
 2. [汉诺塔](#hanoi)
 3. [动态规划](#Dynamic_Programming)
 4. [Merge/Quick 排序](#sort)
+5. [二叉堆优先队列](#bPriority)
+6. [最大公共子串](#sameStr)
 ---
 # 后缀法解多项式 <a name="postfix"></a>
 * 构建Stack类：
@@ -256,4 +258,102 @@ if __name__ == "__main__":
     l = [2,3,1,5,4,6]                            
     do_sort(l, 0, len(l)-1)                      
     print(l)  
-```    
+```   
+---
+# 二叉堆优先队列 <a name="bPriority"></a>
+* 完整二叉树：除去最后一层外，其它各层的节点数都达到最大，且最后一层的结点都集中在左边。
+```bash
+        2
+      5   4
+     6 9 3
+```
+
+完整二叉树可以用数组表示：[0,2,5,4,6,9,3],第一个0为占位，方便后面计算，2为root，5，4分别为
+其左右child，6，9为5的左右child，3为4的左child。
+
+即：**位于位置n处的结点，其左child位于2×n，右child位于2×n+1，其父位于n//2**
+```python
+class BinHeap:
+    def __int__(self):
+        self.heapList = [0] # 堆元素数组，第一个0为占位，方便后续计算
+        self.size = 0    # 堆元素数组长度
+        
+    def insert(self, k):  # 插入元素k
+        self.heapList.append(k)
+        self.size += 1
+        self.goUp(self.size) # 将新插入的k由堆尾向上移动，使得它不小于其父
+    
+    def goUp(self, i):
+        while i//2 > 0: # 查找至root结点
+            if self.heapList[i] < self.heapList[i//2]: # 如果值小于其父，则交换至父位置
+                self.heapList[i], self.heapList[i//2] = self.heapList[i//2], self.heapList[i]
+                i //= 2 # 继续向上查找下一个父
+    
+    def get(self):   # 获取堆最小元素并移除
+        ret = self.heapList[1] # root位置元素必然为最小
+        self.heapList[1] = self.heapList[self.zie] # 将堆最末尾元素拿来补充root位置
+        self.zie -= 1
+        self.heapList.pop()
+        self.goDown(1) # 将新的root元素向下移动，使得其不大于child
+        return ret
+        
+    def goDown(self, i):
+        while i*2 <= self.size: # 结束条件，该元素已无左child，即无child（因为右child肯定在左child后面）
+            mc = self.getMinChild(i) # 从左右child里面选出最小的一个
+            if self.heapList[i] > self.heapList[mc]: # 如果该位置元素大于最小的child，则与其交换
+                self.heapList[i], self.heapList[mc] = self.heapList[mc], self.heapList[i]
+            i = mc
+
+    def getMinChild(self, i):
+        if i*2 + 1 > self.size: # 如果右child 不存在，直接返回左child
+            return i*2
+        if self.heapList[i*2] < self.heapList[i*2 +1]: # 左child小则选择左child
+            return i*2
+        else:
+            return i*2 +1
+```
+---
+# 最大公共子串 <a name="sameStr"></a>
+给两个字符串，找出最长的公共子字符串。例如str1="abcdefds", str2="mcdeds",最长公共子串为"cde"
+
+用矩阵法，两字符串分别为横纵轴，相同字符标1，否则标0，可以看出最大子串长度为最多的斜着连续1的个数：
+
+```bash
+  a b c d e f d s
+m 0 0 0 0 0 0 0 0 
+c 0 0 1 0 0 0 0 0
+d 0 0 0 1 0 0 1 0
+e 0 0 0 0 1 0 0 0
+d 0 0 0 1 0 0 1 0
+s 0 0 0 0 0 0 0 1
+```
+
+考虑到斜着连续1的个数也不太好计算，且二维矩阵只需要保留前一行的结果就够了：若当前行的某元素为1，且该位置左斜上的元素大于1，
+则当前元素的值为左斜上元素值的累加，最后保留累加到的最大值及其位置，即可得到最大连续1的个数。
+```python
+str1 = "abcdefds"
+str2 = "mcdeds"
+
+maxSum = 0  # 最大累计值
+maxPos = 0  # 最大累计值所在的横坐标位置
+preLine = [1 if str2[0]==i else 0 for i in str1]  # 上一行的元素（第一行先计算出来）
+
+for i in range(len(preLine)):  # 先计算保留第一行的1的位置（万一最大子串长度只有1且在第一行）
+    if preLine[i] > 0:
+        maxSum = 1
+        maxPos = i
+
+for i in range(1, len(str2)):  # 从第二行开始逐行遍历
+    curLine = [1 if str2[i]==k else 0 for k in str1]  # 当前行的元素
+    for j in range(1, len(curLine)):
+        if curLine[j] > 0 and preLine[j-1] > 0:  # 遍历元素，若当前值大于0且左斜上大于0，则累加
+            curLine[j] += preLine[j-1]
+            if curLine[j] > maxSum:  # 保留最大的累计值和横坐标位置
+                maxSum = curLine[j]
+                maxPos = j
+    preLine = curLine  # 保存当前行
+
+print(maxSum, str1[maxPos-maxSum+1:maxPos+1])
+```
+
+
