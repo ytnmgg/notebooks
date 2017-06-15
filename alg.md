@@ -6,6 +6,7 @@
 4. [Merge/Quick 排序](#sort)
 5. [二叉堆优先队列](#bPriority)
 6. [最大公共子串](#sameStr)
+7. [字符串排序](#strSort)
 ---
 # 后缀法解多项式 <a name="postfix"></a>
 * 构建Stack类：
@@ -355,5 +356,60 @@ for i in range(1, len(str2)):  # 从第二行开始逐行遍历
 
 print(maxSum, str1[maxPos-maxSum+1:maxPos+1])
 ```
+---
+# 字符串排序 <a name="strSort"></a>
 
+请将车牌号按字母升序排列：
+```bash
+4BCD        1CAB
+3AEF        2AFC
+5CDF        3AEF
+1CAB  ===>  4BCD
+2AFC        59DE
+59DE        5CDF
+AC7E        92BC
+92BC        AC7E
+```
 
+第一列优先级最高，若第一列字符相同，则按第二列字符顺序排，and so forth
+```python
+# 所有字符集合，优先级递减
+a = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F']
+# 输入string
+strs = ['4BCD', '3AEF', '5CDF', '1CAB', '2AFC', '59DE', 'AC7E', '92BC']
+
+# 需要将strs中的字符串按升序排列，第一列字符顺序最优先，如果第一列相同，再看第二列，依次类推。
+# 则先按优先级最低的一列排，即先排最后一列，再按倒数第二列排。。。最后按第一列，
+# 如此可以保证优先级高的顺序不被其它低优先级的排序打乱
+for i in range(len(strs[0])):
+    count = [0] * len(a)  # 计数数组，保存a集合所有字符在strs中出现的次数
+    newStrs = [''] * len(strs)  # 当前列排序之后的新strs数组
+
+    # 统计字符出现的次数，存入count
+    # count长度与a长度相同，该次循环之后，count中保存a中对应字符在strs中某一列出现的总次数
+    # 即：在所有字符串的第i列中， ‘0’有几个， ‘1’有几个。。。
+    for s in strs:
+        pos = a.index(s[len(s)-i-1])  # 第i列字符在a中的对应位置
+        count[pos] += 1  # 出现次数的累加
+
+    # 将上面得到的count从左向右依次累加，可以得到该字符所在字符串在newStrs组中的起始位置
+    # 例如：在某一个count中，‘A’=2，‘B’=2，‘D=1’，其它都为0，则累加以后，‘A’=2，‘B’=4，‘D’=5
+    # 则，字符为‘A’的字符串优先级最高，在newStr中肯定从0号位置开始排，‘B’优先级第二，排在‘A’后面，‘A’有2个，
+    # 所以‘B’的起始位置为‘A’的个数=2（即累加后count中‘A’的值），
+    # 同理，‘D’的起始位置为‘D’前面‘A’+‘B’的个数=4（即累加后count中‘B’的值）
+    for j in range(1, len(count)):
+        count[j] += count[j-1]
+
+    # count中的值已经是含有某个字符的字符串在newStr中的起始位置
+    # 将字符串依次按位置放入newStr组即可，注意放完一个后要更新count中的位置值，
+    # 以便下一个含有相同字符的字符串依次往后放而不重叠
+    for s in strs:
+        pos = a.index(s[len(s) - i - 1])  # 第i列字符在a中的对应位置
+        strPos = count[pos-1]  # 如上面例子，‘A’的位置为‘A’之前字符的值，‘B’的位置为‘A’的值
+        newStrs[strPos] = s
+        count[pos-1] += 1  # 更新count中的位置值，作为下一个含有相同字符字符串的位置
+
+    strs = newStrs  # 该列排完，更新strs，准备下一列的排序
+
+print(strs)
+```
