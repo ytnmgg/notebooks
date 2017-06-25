@@ -73,7 +73,7 @@ nums2 = [3, 4]
 The median is (2 + 3)/2 = 2.5
 
 求第k大的数的问题，用到了二分法的思想来减少搜索次数：  
-![i1.png](https://github.com/ytnmgg/notebooks/edit/master/algorithms/image/i1.PNG)
+![i1.png](https://raw.githubusercontent.com/ytnmgg/notebooks/master/algorithms/image/i1.PNG)
 ```python
 class Solution(object):
     def findMedianSortedArrays(self, nums1, nums2):
