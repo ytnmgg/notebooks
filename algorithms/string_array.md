@@ -117,3 +117,66 @@ class Solution(object):
         else:
             return self.findKth(A[i:],B[:j]
 ```
+---
+# [LeetCode] Longest Palindromic Substring
+> Given a string s, find the longest palindromic substring in s. You may assume that the maximum length of s is 1000.
+
+> Example:  
+Input: "babad"
+Output: "bab"
+Note: "aba" is also a valid answer.  
+> Example:  
+Input: "cbbd"
+Output: "bb"
+
+寻找最长回文串（正反一样），直接思路为遍历每个char，找出以该char为中心，向两边伸展，能包含最长的回文串
+遍历过程中，借助Manacherz算法减少重复搜索次数。  
+https://www.felix021.com/blog/read.php?2040  
+https://segmentfault.com/a/1190000008484167  
+https://www.zhihu.com/question/30226229  
+
+首先用一个非常巧妙的方式，将所有可能的奇数/偶数长度的回文子串都转换成了奇数长度：在每个字符的两边都插
+入一个特殊的符号。比如 abba 变成 #a#b#b#a#， aba变成 #a#b#a#。 为了进一步减少编码的复杂度，在字符串的开始和
+结尾插入特殊字符，这样就不用特殊处理越界问题。然后用一个数组 P[i] 来记录以字符s[i]为中心的最长回文子串向左/右扩张的长度。
+
+![i2.png](https://raw.githubusercontent.com/ytnmgg/notebooks/master/algorithms/image/i2.PNG)
+
+如图所示，C为遍历过程中保存的臂展最大的char的位置，R为其臂展最远点绝对坐标。i为当前char位置，P[i]保存的是位置i的char的
+臂展（单边绝对长度），当i落入R以内时，可根据马拉车算法，减少重复计算次数。图中j=2C-i为i对于C的对称点，且P[j]已经计算过了。
+根据回文串的性质，以C为中心，左右边R/2的char应该相同。  
+* 当P[j]落在R以内时，即P[j]<R-i时，可以确定P[i]=P[j]。
+* 当P[j]大于R-i时，P[i]至少为R-i，大于R-i的部分可以不是回文串，因为我们只能确定C左右R/2相同
+
+```python
+class Solution(object):
+    def longestPalindrome(self, s):
+        """
+        :type s: str
+        :rtype: str
+        """
+        # https://www.felix021.com/blog/read.php?2040
+        # https://segmentfault.com/a/1190000008484167
+        # https://www.zhihu.com/question/30226229
+        
+        # Transform S into T.
+        # For example, S = "abba", T = "^#a#b#b#a#$".
+        # ^ and $ signs are sentinels appended to each end to avoid bounds checking
+        T = '#'.join('^{}$'.format(s))
+        n = len(T)
+        P = [0] * n
+        C = R = 0
+        for i in range (1, n-1):
+            P[i] = (R > i) and min(R - i, P[2*C - i]) # equals to i' = C - (i-C)
+            # Attempt to expand palindrome centered at i
+            while T[i + 1 + P[i]] == T[i - 1 - P[i]]:
+                P[i] += 1
+    
+            # If palindrome centered at i expand past R,
+            # adjust center based on expanded palindrome.
+            if i + P[i] > R:
+                C, R = i, i + P[i]
+    
+        # Find the maximum element in P.
+        maxLen, centerIndex = max((n, i) for i, n in enumerate(P))
+        return s[(centerIndex  - maxLen)//2: (centerIndex  + maxLen)//2] 
+```
