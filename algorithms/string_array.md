@@ -179,3 +179,67 @@ class Solution(object):
         maxLen, centerIndex = max((n, i) for i, n in enumerate(P))
         return s[(centerIndex  - maxLen)//2: (centerIndex  + maxLen)//2] 
 ```
+---
+# [LeetCode] Regular Expression Matching 
+> Implement regular expression matching with support for '.' and '*'.
+'.' Matches any single character.
+'*' Matches zero or more of the preceding element.
+The matching should cover the entire input string (not partial).
+The function prototype should be:
+bool isMatch(const char *s, const char *p)
+Some examples:
+isMatch("aa","a") → false
+isMatch("aa","aa") → true
+isMatch("aaa","aa") → false
+isMatch("aa", "a*") → true
+isMatch("aa", ".*") → true
+isMatch("ab", ".*") → true
+isMatch("aab", "c*a*b") → true
+
+动态规划法，由短到长逐个匹配
+https://www.youtube.com/watch?v=l3hda49XcDE  
+| 1 | ? | ? | ? | ? | 
+| 0 | ? | ? | ? | ? | 
+| 0 | ? | ? | ? | ? |
+| 0 | ? | ? | ? | ? |
+横轴为pattern串p，纵轴为待匹配串s，第一行为s为空时p的值对应的结果，第一列为p为空时不同的s对应
+的匹配情况，因为空s与空p是匹配的，所以左上角为1。又空的p是无法匹配非空的s，所以第一列其它值皆0。
+对于第一行，即空s，p是有办法匹配上的，比如`p="a*b*c*"`。
+其它位置的算法： 
+
+* 当前p值为`.`或者与当前s值相同，则当前位置p与s匹配，总匹配结果与前一个位置的p与s是否匹配有关
+* 当前位置的p为`*`时，又分为两种情况
+    * `*`号将其前一个值吃掉，比如`p=acb*`匹配`s=ac`, b被\*吃掉，这种情况下，如果p被吃字符前面的串能
+    匹配当前s则总结果匹配，即例子中的`p=ac`匹配`s=ac`。
+    * `*`号不吃前面的值，而是延伸前面的值，此时如果p前面的值是`.`或者与s当前值相同，当前p与s匹配，总的结果只需要当前p能匹配s之前的序列。比如`p=acb*`与`s=abb`，当p的`b*`匹配了s的第二个`b`，而且它还能匹配`s=ab`，最终结果为匹配。
+```python
+class Solution(object):
+    def lengthOfLongestSubstring(self, s):
+        """
+        :type s: str
+        :rtype: int
+        """
+        # 初始化表，全部为False
+        t = [[False for _ in range(len(p)+1)] for _ in range(len(s)+1)]
+
+        t[0][0] = True  # 空p匹配空s，故此数为1
+        
+        # 计算第一行，如果p为a*b*这种，即可匹配
+        for i in range(2, len(p)+1):
+            if p[i-1] == '*' and t[0][i-2]:
+                t[0][i] = True
+    
+        for i in range(1, len(t)):
+            for j in range(1, len(p)+1):
+                if p[j-1] != '*' and (p[j-1] == '.' or p[j-1] == s[i-1]):
+                    t[i][j] = t[i-1][j-1]  # p不为*， 直接对应匹配即可，总结果受之前结果影响
+                elif p[j-1] == '*':
+                    if t[i][j-2] is True:
+                        t[i][j] = True  # *吃掉前一个字符，若往前推2个能匹配，则匹配
+                    elif p[j-2] == s[i-1] or p[j-2] == '.':
+                        t[i][j] = t[i-1][j]  # *不吃前一个字符，则若当前p能匹配上一个s，则匹配
+                else:
+                    t[i][j] = False
+    
+        return t[len(s)][len(p)]
+```
