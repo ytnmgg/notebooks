@@ -3,6 +3,7 @@
 > You may assume that each input would have exactly one solution, and you may not use the same element twice.
 > Example:
 > nums = [2, 7, 11, 15], target = 9, return [0, 1].
+
 Create a map to store the index and the remaining value for that index：
 ```python
 class Solution(object):
