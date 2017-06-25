@@ -243,3 +243,49 @@ class Solution(object):
     
         return t[len(s)][len(p)]
 ```
+---
+# [LeetCode] Wildcard Matching  
+> Implement wildcard pattern matching with support for '?' and '*'.
+'?' Matches any single character.
+'*' Matches any sequence of characters (including the empty sequence).
+The matching should cover the entire input string (not partial).
+The function prototype should be:
+bool isMatch(const char *s, const char *p)
+Some examples:
+isMatch("aa","a") → false
+isMatch("aa","aa") → true
+isMatch("aaa","aa") → false
+isMatch("aa", "*") → true
+isMatch("aa", "a*") → true
+isMatch("ab", "?*") → true
+isMatch("aab", "c*a*b") → false
+
+
+算法与上面的正则匹配类似
+```python
+class Solution(object):
+    def isMatch(self, s, p):
+        """
+        :type s: str
+        :type p: str
+        :rtype: bool
+        """
+        t = [[False for _ in range(len(p)+1)] for _ in range(len(s)+1)]
+        t[0][0] = True
+    
+        for i in range(1, len(p)+1):
+            if p[i-1] == '*' and t[0][i-1]:
+                t[0][i] = True
+    
+        for i in range(1, len(s)+1):
+            for j in range(1, len(p)+1):
+                if p[j-1] != '*' and (p[j-1] == s[i-1] or p[j-1] == '?'):
+                    t[i][j] = t[i-1][j-1]
+                elif p[j-1] == '*':
+                    if t[i][j-1]:  # *代表空
+                        t[i][j] = True
+                    elif t[i-1][j]:  # *代表匹配任意
+                        t[i][j] = True
+    
+        return t[len(s)][len(p)]
+```
