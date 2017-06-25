@@ -181,20 +181,20 @@ class Solution(object):
 ```
 ---
 # [LeetCode] Regular Expression Matching 
-> Implement regular expression matching with support for '.' and '*'.
-'.' Matches any single character.
-'*' Matches zero or more of the preceding element.
-The matching should cover the entire input string (not partial).
-The function prototype should be:
-bool isMatch(const char *s, const char *p)
-Some examples:
-isMatch("aa","a") → false
-isMatch("aa","aa") → true
-isMatch("aaa","aa") → false
-isMatch("aa", "a*") → true
-isMatch("aa", ".*") → true
-isMatch("ab", ".*") → true
-isMatch("aab", "c*a*b") → true
+> Implement regular expression matching with support for '`.`' and '`*`'.  
+'`.`' Matches any single character.  
+'`*`' Matches zero or more of the preceding element.  
+The matching should cover the entire input string (not partial).  
+The function prototype should be:  
+bool isMatch(const char `*s`, const char `*p`)  
+Some examples:  
+isMatch("aa","a") → false  
+isMatch("aa","aa") → true  
+isMatch("aaa","aa") → false  
+isMatch("aa", "a\*") → true  
+isMatch("aa", ".\*") → true  
+isMatch("ab", ".\*") → true  
+isMatch("aab", "c\*a\*b") → true  
 
 动态规划法，由短到长逐个匹配
 https://www.youtube.com/watch?v=l3hda49XcDE  
@@ -245,20 +245,20 @@ class Solution(object):
 ```
 ---
 # [LeetCode] Wildcard Matching  
-> Implement wildcard pattern matching with support for '?' and '*'.
-'?' Matches any single character.
-'*' Matches any sequence of characters (including the empty sequence).
-The matching should cover the entire input string (not partial).
-The function prototype should be:
-bool isMatch(const char *s, const char *p)
-Some examples:
-isMatch("aa","a") → false
-isMatch("aa","aa") → true
-isMatch("aaa","aa") → false
-isMatch("aa", "*") → true
-isMatch("aa", "a*") → true
-isMatch("ab", "?*") → true
-isMatch("aab", "c*a*b") → false
+> Implement wildcard pattern matching with support for '?' and '`*`'.  
+'?' Matches any single character.  
+'`*`' Matches any sequence of characters (including the empty sequence).  
+The matching should cover the entire input string (not partial).  
+The function prototype should be:  
+bool isMatch(const char `*s`, const char `*p`)  
+Some examples:  
+isMatch("aa","a") → false  
+isMatch("aa","aa") → true  
+isMatch("aaa","aa") → false  
+isMatch("aa", "\*") → true  
+isMatch("aa", "a\*") → true  
+isMatch("ab", "?\*") → true  
+isMatch("aab", "c\*a\*b") → false  
 
 
 算法与上面的正则匹配类似
