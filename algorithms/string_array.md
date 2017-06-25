@@ -85,6 +85,8 @@ The median is (2 + 3)/2 = 2.5
 更进一步，因为merge后的第k大出现在红色箭头之间，则B的左边绿色部分j=k-i个数一定在merge后序列的前k个数里面，
 则只需在A[:i]和B[j:]中找出i个数，然后与刚刚的k-i个数一同凑成k个数，第k大数便找到。
 
+同理，当A[i]<B[j]，只需要在A与B[:j]中寻找第k大的数，更进一步，A中的前i个数已经确定在meger后序列的前k个数中，
+即只需要在A[i:]和B[:j]中再找出前k-i=j个数即可。
 ```python
 class Solution(object):
     def findMedianSortedArrays(self, nums1, nums2):
@@ -100,16 +102,17 @@ class Solution(object):
             
             
     def findKth(self,A,B,k):
-        if len(A)>len(B):
+        if len(A)>len(B):  # A始终为较短的序列
             A,B=B,A
-        if not A:
+        if not A:  # 结束条件1， A已经折半空了
             return B[k]
-        if k==len(A)+len(B)-1:
+        if k==len(A)+len(B)-1:  # 结束条件2， k在A+B序列的最后面
             return max(A[-1],B[-1])
-        i=len(A)//2
+        i=len(A)//2  #  将A折半，二分查找
         j=k-i
+        
+        # 如下2个判断详见上面分析
         if A[i]>B[j]:
-            #Here I assume it is O(1) to get A[:i] and B[j:]. In python, it's not but in cpp it is.
             return self.findKth(A[:i],B[j:],i)
         else:
             return self.findKth(A[i:],B[:j]
