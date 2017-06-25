@@ -145,7 +145,9 @@ https://www.zhihu.com/question/30226229
 臂展（单边绝对长度），当i落入R以内时，可根据马拉车算法，减少重复计算次数。图中j=2C-i为i对于C的对称点，且P[j]已经计算过了。
 根据回文串的性质，以C为中心，左右边R/2的char应该相同。  
 * 当P[j]落在R以内时，即P[j]<R-i时，可以确定P[i]=P[j]。
-* 当P[j]大于R-i时，P[i]至少为R-i，大于R-i的部分可以不是回文串，因为我们只能确定C左右R/2相同
+* 当P[j]大于R-i时，P[i]至少为R-i，大于R-i的部分可以不是回文串，因为我们只能确定C左右R/2相同  
+综上， `P[i] = min(R-i, P[2C-i])`  
+
 
 ```python
 class Solution(object):
@@ -154,10 +156,7 @@ class Solution(object):
         :type s: str
         :rtype: str
         """
-        # https://www.felix021.com/blog/read.php?2040
-        # https://segmentfault.com/a/1190000008484167
-        # https://www.zhihu.com/question/30226229
-        
+ 
         # Transform S into T.
         # For example, S = "abba", T = "^#a#b#b#a#$".
         # ^ and $ signs are sentinels appended to each end to avoid bounds checking
@@ -166,17 +165,17 @@ class Solution(object):
         P = [0] * n
         C = R = 0
         for i in range (1, n-1):
-            P[i] = (R > i) and min(R - i, P[2*C - i]) # equals to i' = C - (i-C)
-            # Attempt to expand palindrome centered at i
+            P[i] = (R > i) and min(R - i, P[2*C - i])
+            
+            # 在马拉车算法得到的P[i]的基础上，再左右扩展，直到不是回文串为止
             while T[i + 1 + P[i]] == T[i - 1 - P[i]]:
                 P[i] += 1
     
-            # If palindrome centered at i expand past R,
-            # adjust center based on expanded palindrome.
+            # 保存每次最远的臂展，因为我们总想要i落在R以内才能使用马拉车算法
             if i + P[i] > R:
                 C, R = i, i + P[i]
     
-        # Find the maximum element in P.
+        # 在P中间找出最大的值
         maxLen, centerIndex = max((n, i) for i, n in enumerate(P))
         return s[(centerIndex  - maxLen)//2: (centerIndex  + maxLen)//2] 
 ```
