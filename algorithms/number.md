@@ -124,6 +124,64 @@ class Solution(object):
         return maxV
 ```
 ---
+# [LeetCode] Trapping Rain Water 
+>  Given n non-negative integers representing an elevation map where the width of each bar is 1, 
+compute how much water it is able to trap after raining.  
+For example,  
+Given [0,1,0,2,1,0,1,3,2,1,2,1], return 6.  
+```
+       |
+   |   || | 
+ | || ||||||
+```
+装水问题，从头i开始，找到一个高于或者等于当前位置值的j，则(i,j)之间最多装i与j的位置差乘以高度差，
+其中，还要减去ij之间其它柱子占的空间。  
+若找不到高于等于i位置的j，即i以后的柱子都矮于i位置的柱子，则从最后一个柱子往回找，重复刚刚的步骤，
+但是这次一定能找到高于最后一个柱子的位置（即i位置）
+
+```python
+class Solution(object):
+    def trap(self, height):
+        """
+        :type height: List[int]
+        :rtype: int
+        """
+        
+        if len(height) < 3:
+            return 0
+        i = 0
+        out = 0
+        while i < len(height):
+            j = i + 1
+            v = 0  # 保存装水量
+            
+            # 寻找高于或等于i位置柱子的另一个柱子
+            while j < len(height) and height[j] < height[i]:
+                v += height[i] - height[j]
+                j += 1
+            # 找到了，保存这一过程的水量，以j为起始点继续找
+            if i + 1 < j < len(height):
+                out += v
+                i = j
+            elif i + 1 == j:  # 排除相邻连个柱子的情况，2个柱子无法装水
+                i = j
+            else:  # j == len(height)  # 没找到，从最后个柱子开始往回找
+                j = i
+                m = len(height) - 1  # 记录开始寻找后的起始点
+                while m > j:
+                    n = m - 1  # 移动指针
+                    vv = 0
+                    # 直到n位置的柱子高于等于m位置的柱子为止
+                    while n > j and height[n] < height[m]:
+                        vv += height[m] - height[n]
+                        n -= 1
+                    m = n  # 找到了，保存这一过程的水量，以n为起始点继续找
+                    out += vv
+                break
+    
+        return out
+```
+---
 # [LeetCode] 3Sum
 > Given an array S of n integers, are there elements a, b, c in S such that a + b + c = 0? 
 Find all unique triplets in the array which gives the sum of zero.
