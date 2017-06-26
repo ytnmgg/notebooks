@@ -82,3 +82,44 @@ class Solution(object):
         else:
             return self.findKth(A[i:],B[:j]
 ```
+---
+# [LeetCode] Container With Most Water
+> Given n non-negative integers a1, a2, ..., an, where each represents a point at coordinate (i, ai). n vertical lines 
+are drawn such that the two endpoints of line i is at (i, ai) and (i, 0). Find two lines, which together with x-axis 
+forms a container, such that the container contains the most water.  
+Note: You may not slant the container and n is at least 2. 
+
+一排柱子，高低不同，找出两根，最多能装多少水。常规思路是遍历数组，找出两两组合，求最大差值。
+复杂度为O(N^2)，其实可以从两头往中间找，排除掉一部分柱子：  
+```
+   |  
+   |  |     |  
+|  |  |  |  |  
+|  |  |  |  |  
+```
+如上图所示，当最后一根柱子高于第一根柱子时，第一根和最后一根柱子的装水量为V，第一根柱子不动，
+由最后一根再往前找，不可能找到比V大的柱子，因为水的高度由矮柱子（即第一根柱子）决定，从后往前找，
+水面宽度是越来越小的，即V越来越小。所以此时要找到更大的V，需要从第一根柱子开始往后找。类似的，
+若最后一根柱子小于第一根，则只需要从最后一根开始往前找即可。
+
+
+```python
+class Solution(object):
+    def maxArea(self, height):
+        """
+        :type height: List[int]
+        :rtype: int
+        """
+        
+        maxV = 0
+        i = 0
+        j = len(height) - 1
+    
+        while i < j:
+            maxV = max(maxV, (j - i) * min(height[i], height[j]))  # 每次移动，都保存最大水量
+            if height[j] > height[i]:
+                i += 1
+            else:
+                j -= 1
+        return maxV
+```
