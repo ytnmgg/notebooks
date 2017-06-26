@@ -278,3 +278,38 @@ class Solution(object):
 
         check(0, 0)
 ```
+---
+# [LeetCode] First Missing Positive 
+> Given an unsorted integer array, find the first missing positive integer.  
+For example,  
+Given [1,2,0] return 3,  
+and [3,4,-1,1] return 2.  
+Your algorithm should run in O(n) time and uses constant space.  
+
+算法要求使用常量的空间，则想到原地替换，思路同计数排序（Counting sort）：  
+http://www.cnblogs.com/ccsccs/articles/4216113.html  
+
+```python
+class Solution(object):
+    def firstMissingPositive(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: int
+        """
+        
+        i = 0
+        while i < len(nums):
+            # 假设i位置上的值为a，把a放到a位置上去。把a位置上的值放到i位置上来
+            if 1 <= nums[i] <= len(nums) and nums[i] != nums[nums[i] - 1]:
+                tmp = nums[i]
+                nums[i] = nums[tmp - 1]
+                nums[tmp - 1] = tmp
+            else:
+                i += 1
+        # 遍历nums，如果i不等于nums[i]，则i为第一个缺失的正数
+        for i in range(len(nums)):
+            if nums[i] != i+1:
+                return i+1
+        else:
+            return len(nums)+1
+```
