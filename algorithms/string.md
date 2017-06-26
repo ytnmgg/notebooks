@@ -204,3 +204,117 @@ class Solution(object):
     
         return t[len(s)][len(p)]
 ```
+---
+# [LeetCode] Valid Parentheses
+> Given a string containing just the characters '(', ')', '{', '}', '[' and ']', determine if 
+the input string is valid. The brackets must close in the correct order, "()" and "()[]{}" are 
+all valid but "(]" and "([)]" are not.
+
+```python
+class Solution(object):
+    def isValid(self, s):
+        """
+        :type s: str
+        :rtype: bool
+        """
+        stack = []  # 保存括号，遇到左括号入栈，遇到右括号弹栈检查
+        # 括号类型map，用于检查括号是否匹配
+        l = {"(": 1, "{": 2, "[": 3}
+        r = {")": 1, "}": 2, "]": 3}
+        for i in s:
+            if i in l:
+                stack.append(i)
+            elif i in r:
+                if len(stack) == 0:
+                    return False
+    
+                op = stack.pop()
+                if r[i] != l[op]:
+                    return False
+    
+        if len(stack) != 0:
+            return False
+        else:
+            return True
+```
+---
+# [LeetCode] Generate Parentheses
+> Given n pairs of parentheses, write a function to generate all combinations 
+of well-formed parentheses.  
+For example, given n = 3, a solution set is:  
+```
+[
+  "((()))",
+  "(()())",
+  "(())()",
+  "()(())",
+  "()()()"
+]
+```
+DFS回溯：  
+http://blog.csdn.net/yutianzuijin/article/details/13161721  
+http://www.cnblogs.com/grandyang/p/4444160.html  
+实际上就是暴力遍历。
+
+
+```python
+class Solution(object):
+    def generateParenthesis(self, n):
+        """
+        :type n: int
+        :rtype: List[str]
+        """
+
+        out = []
+        self.dfs(n, n, "", out)
+        return out
+    
+    # left和right分别为剩余的左右括号数，s为中间变化量，out保存最后结果
+    def dfs(self, left, right, s, out):
+        if left == 0 and right == 0:  # 没有剩余括号，即n个左右括号都用光了，得到一个解
+            out.append(s)
+
+        if left > 0:  # 左括号还有剩余，可以直接加到s里面
+            self.dfs(left-1, right, s+'(', out)
+            
+        # 右括号还有剩余，只能是s里面的左括号多过右括号时，才能继续往s里面加左括号
+        if right > 0 and left < right:  
+            self.dfs(left, right-1, s+')', out)
+```
+---
+# [LeetCode] Longest Valid Parentheses 
+> Given a string containing just the characters '(' and ')', find the length of the longest 
+valid (well-formed) parentheses substring.  
+For "(()", the longest valid parentheses substring is "()", which has length = 2.  
+Another example is ")()())", where the longest valid parentheses substring is "()()", which 
+has length = 4. 
+
+此题难点是要求最大连续valid，而不是直接找出所有的valid然后加起来就可以了。  
+变通思路，通过入栈出栈，把所有valid的都消灭了，stack里面剩下的就是非valid的。只需要用stack记住
+括号的位置，则可以知道非valid的括号在string中的位置，然后遍历string，找出两个非valid括号之间的最大距离。
+即找到了最大连续的valid括号序列。
+
+```python
+class Solution(object):
+    def longestValidParentheses(self, s):
+        """
+        :type s: str
+        :rtype: int
+        """
+        sLen = len(s)
+        stack = []  # 保存括号位置的栈
+        for i in range(sLen):
+            if s[i] == '(':
+                stack.append(i)
+            else:
+                if len(stack) != 0 and s[stack[-1]] == '(':
+                    stack.pop()  # 配对到valid括号，直接丢掉
+                else:
+                    stack.append(i)
+    
+        stack = [-1] + stack + [sLen]  # 添加头尾，便于处理越界问题
+        maxV = 0
+        for i in range(1, len(stack)):  # 遍历找出最大距离
+            maxV = max(stack[i]-stack[i-1]-1, maxV)
+        return maxV
+```
