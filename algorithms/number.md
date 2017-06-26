@@ -123,3 +123,90 @@ class Solution(object):
                 j -= 1
         return maxV
 ```
+---
+# [LeetCode] 3Sum
+> Given an array S of n integers, are there elements a, b, c in S such that a + b + c = 0? 
+Find all unique triplets in the array which gives the sum of zero.
+Note: The solution set must not contain duplicate triplets.  
+For example, given array S = [-1, 0, 1, 2, -1, -4],
+A solution set is:
+[
+  [-1, 0, 1],
+  [-1, -1, 2]
+]
+
+求3个数的和， 思路类似于Container With Most Water，即用夹逼方法，由两头往中间走，找出满足要求的2个数。
+
+```python
+class Solution(object):
+    def threeSum(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: List[List[int]]
+        """
+        nums = sorted(nums)  # 先排序，然后才能用夹逼
+        out = []
+        for i in range(len(nums)):
+            if i > 0 and nums[i] == nums[i-1]:  # 排除重复结果
+                continue
+    
+            # 2sum 夹逼， j和k一头一尾，往中间走
+            j = i+1
+            k = len(nums) - 1
+            while j<k:
+                if nums[i] + nums[j] + nums[k] == 0:
+                    out.append([nums[i], nums[j], nums[k]])
+                    j += 1
+                    k -= 1
+                    while j < k and nums[j] == nums[j-1]:  # 排除重复结果
+                        j += 1
+                    while j < k and nums[k] == nums[k+1]:  # 排除重复结果
+                        k -= 1
+                elif nums[i] + nums[j] + nums[k] < 0:  # 总和不够，小头往前靠，增大总和
+                    j += 1
+                elif nums[i] + nums[j] + nums[k] > 0:  # 总和超额， 大头往回走，减小总和
+                    k -= 1
+                    
+        return out
+```
+---
+# [LeetCode] 3Sum Closest 
+> Given an array S of n integers, find three integers in S such that the sum is closest 
+to a given number, target. Return the sum of the three integers. You may assume that each 
+input would have exactly one solution.  
+For example, given array S = {-1 2 1 -4}, and target = 1.
+The sum that is closest to the target is 2. (-1 + 2 + 1 = 2).
+
+上个题的变化，方法类似
+
+```python
+class Solution(object):
+    def threeSumClosest(self, nums, target):
+        """
+        :type nums: List[int]
+        :type target: int
+        :rtype: int
+        """
+        nums = sorted(nums)
+        out = nums[0] + nums[1] + nums[2]
+
+        for i in range(len(nums)):
+            if i > 0 and nums[i] == nums[i-1]:
+                continue
+    
+            # 2sum 夹逼
+            j = i+1
+            k = len(nums) - 1
+            while j<k:
+    
+                if abs(target - (nums[i] + nums[j] + nums[k])) < abs(target-out):
+                    out = nums[i] + nums[j] + nums[k]
+    
+                if nums[i] + nums[j] + nums[k] == target:
+                    return target
+                elif nums[i] + nums[j] + nums[k] < target:
+                    j += 1
+                elif nums[i] + nums[j] + nums[k] > target:
+                    k -= 1
+        return out
+```
