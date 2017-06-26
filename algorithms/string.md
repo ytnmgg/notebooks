@@ -318,3 +318,90 @@ class Solution(object):
             maxV = max(stack[i]-stack[i-1]-1, maxV)
         return maxV
 ```
+---
+# [LeetCode] Substring with Concatenation of All Words 
+> You are given a string, s, and a list of words, words, that are all of the same length. 
+Find all starting indices of substring(s) in s that is a concatenation of each word in words 
+exactly once and without any intervening characters.  
+For example, given:  
+s: "barfoothefoobarman" words: ["foo", "bar"]  
+You should return the indices: [0,9].  
+(order does not matter). 
+
+滑动窗口法。  
+```
+s序列:
+|  wLen  |  wLen  |  wLen  |  wLen  |
+```
+将s分割为数个窗口，窗口长度为待寻找子串长度（wLen）。分为大小2层循环，外层大循环`step=1`，遍历次数为
+单个窗口长度，内层小循环`step=wLen`，循环次数为窗口个数，如此2层遍历即可cover整个s序列。
+
+```python
+class Solution(object):
+    def findSubstring(self, s, words):
+        """
+        :type s: str
+        :type words: List[str]
+        :rtype: List[int]
+        """
+        
+        sLen = len(s)
+        wCnt = len(words)
+        if sLen == 0 or wCnt == 0:
+            return []
+        wLen = len(words[0])
+        wMap = {}  # 保存words中word的出现次数
+        for word in words:
+            wMap.setdefault(word, 0)
+            wMap[word] += 1
+    
+        out = []
+        # 外层大循环
+        for i in range(wLen):
+            wMapNew = {}  # 保存在s中找到的word及其出现次数
+            count = 0  # 保存满足要求的word的总个数
+            left = i  # 滑动窗的最左边沿
+    
+            # 滑窗从i开始往s尾部滑动，每次跳wLen长度
+            # i相当于窗口offset，滑窗每次跳动，都去检验窗口内的序列是否满足要求
+            for j in range(i, sLen-wLen+1, wLen):
+                word = s[j:wLen+j]  # 取出滑窗内的序列
+    
+                if word in wMap and wMap[word] > 0:  # 如果序列是需要的
+                    wMapNew.setdefault(word, 0)
+                    wMapNew[word] += 1  # 更新找到的word字典
+    
+                    if wMapNew[word] <= wMap[word]:
+                        # 如果找到的word还没有超过需要找的个数，则为有效word
+                        count += 1
+                    else:
+                        # 否则，对于某特定word，已经找到足额的个数了，则此word无效
+                        # 此时不能简单的把已经找到的其它word丢弃，将滑窗移动一个step，
+                        # 而应该大踏步移动滑窗至重复位置，开始新的寻找（重复点及其之前
+                        # 已无必要保留，反正会重复）比如，s="adbbadc", words=["a","b","c","d"],
+                        # 找到第二个b时，前面已经找到了a,d,b，则b超额，此时不需要移动滑窗，从d
+                        # 开始寻找，而应该直接跳过d和第一个b，直接从第二个b开始寻找。
+                        while wMapNew[word] > wMap[word]:
+                            cutWord = s[left:wLen+left]
+                            left += wLen
+                            wMapNew[cutWord] -= 1
+                            if wMapNew[cutWord] < wMap[cutWord]:
+                                count -= 1
+    
+                    if count == wCnt:  # 找到valid的word个数足够，保存左边界至输出列表
+                        out.append(left)
+                        
+                        # 去掉找到的第一个word，滑窗前跳一个wLen，继续搜索
+                        wMapNew[s[left:left+wLen]] -= 1  
+                        count -= 1
+                        left += wLen
+                else:
+                    # 序列不是需要的，滑窗向前跳动wLen长度
+                    # 为什么不是跳动1个单位，因为有外层i的存在，可以保证整个s都能被cover
+                    wMapNew = {}
+                    count = 0
+                    left = j+wLen
+                    continue
+    
+        return out
+```
