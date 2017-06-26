@@ -1,0 +1,36 @@
+---
+# [LeetCode] Merge k Sorted Lists 
+> Merge k sorted linked lists and return it as one sorted list. Analyze and describe its complexity. 
+
+因为要merge多个链表，都去遍历的话复杂的较高。巧用优先队列，每次自动拿出最小的node，组成新的链表。
+
+```python
+# Definition for singly-linked list.
+# class ListNode(object):
+#     def __init__(self, x):
+#         self.val = x
+#         self.next = None
+
+class Solution(object):
+    def mergeKLists(self, lists):
+        """
+        :type lists: List[ListNode]
+        :rtype: ListNode
+        """
+        
+        from Queue import PriorityQueue
+        dummy = ListNode(None)  # 添加链表头，便于处理越界问题
+        curr = dummy
+        q = PriorityQueue()
+        for node in lists:
+            if node: q.put((node.val,node))  # 优先队列里面保存一对（val，Node），val用于比较，实际用Node
+        while q.qsize()>0:
+            curr.next = q.get()[1]
+            curr=curr.next
+            
+            # 从优先队列里面拿出来的实际上是个链表，我们只比较了头结点，
+            # 把头节点插入curr以后，需要把头节点所在链表上的剩余部分放入优先队列继续比较
+            if curr.next:
+                q.put((curr.next.val, curr.next))
+        return dummy.next
+```
