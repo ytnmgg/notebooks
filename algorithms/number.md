@@ -210,3 +210,71 @@ class Solution(object):
                     k -= 1
         return out
 ```
+---
+# [LeetCode] Valid Sudoku 
+> Write a program to solve a Sudoku puzzle by filling the empty cells.
+Empty cells are indicated by the character '.'.
+You may assume that there will be only one unique solution. 
+```
+|5|3|.|.|7|.|.|.|.|
+|6|.|.|1|9|5|.|.|.|
+|.|9|8|.|.|.|.|6|.|
+|8|.|.|.|6|.|.|.|3|
+|4|.|.|8|.|3|.|.|1|
+|7|.|.|.|2|.|.|.|6|
+|.|6|.|.|.|.|2|8|.|
+|.|.|.|4|1|9|.|.|5|
+|.|.|.|.|8|.|.|7|9|
+```
+数独游戏，典型的回溯搜索，合适就继续，不合适就回退。
+
+```python
+class Solution(object):
+    def solveSudoku(self, board):
+        """
+        :type board: List[List[str]]
+        :rtype: void Do not return anything, modify board in-place instead.
+        """
+        rowList = [[] for i in range(9)]  # 保存每一列的已经用了的数
+        colList = [[] for i in range(9)]  # 保存每一行的已经用了的数
+        boxList = [[] for i in range(9)]  # 保存每一个9宫格已经用了的数
+    
+        for i in range(9):  # 遍历棋盘，为上面3个List赋值
+            for j in range(9):
+                if board[i][j] != '.':
+                    rowList[i].append(board[i][j])
+                    boxList[i//3*3+j//3].append(board[i][j])
+                if board[j][i] != '.':
+                    colList[i].append(board[j][i])
+                
+        def check(i, j):  # 给board[i][j]填值
+            if i == 9:  # 前9行填满了，结束
+                return True
+                
+            m = i if j + 1 < 9 else i + 1  # 下一个i
+            n = j + 1 if j + 1 < 9 else 0  # 下一个j
+            
+            if board[i][j] != '.':  # board上(i,j)处已经有数，继续递归填下一个位置(m,n)
+                if check(m, n):  # 如果以后的位置都填好了，就返回True给上一级
+                    return True
+            else:
+                for k in range(1, 10):  # 找一个数填到(i,j)
+                    # 如果该数在当前行/列/九宫格均没出现过，则为有效数
+                    if str(k) not in rowList[i] and str(k) not in colList[j] and str(k) not in boxList[i // 3 * 3 + j // 3]:
+                        board[i][j] = str(k)
+                        rowList[i].append(str(k))
+                        colList[j].append(str(k))
+                        boxList[i//3*3+j//3].append(str(k))
+                        if check(m, n):  # 检查下一个位置，若之后的都填好，则返回True给上一级
+                            return True
+                            
+                        # 以后的位置行不通，找不到数返回True，则把刚刚填的数pop掉，
+                        # 用for循环继续尝试下一个k
+                        rowList[i].pop()  
+                        colList[j].pop()
+                        boxList[i // 3 * 3 + j // 3].pop()
+    
+                board[i][j] = '.'
+
+        check(0, 0)
+```
