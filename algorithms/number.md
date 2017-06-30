@@ -269,7 +269,7 @@ class Solution(object):
         return out
 ```
 ---
-# [LeetCode] Valid Sudoku 
+# [LeetCode] Sudoku Solver
 > Write a program to solve a Sudoku puzzle by filling the empty cells.
 Empty cells are indicated by the character '.'.
 You may assume that there will be only one unique solution. 
@@ -335,6 +335,63 @@ class Solution(object):
                 board[i][j] = '.'
 
         check(0, 0)
+```
+---
+# [LeetCode] N-Queens
+> The n-queens puzzle is the problem of placing n queens on an n×n chessboard such that no two queens attack each other.
+Given an integer n, return all distinct solutions to the n-queens puzzle.
+Each solution contains a distinct board configuration of the n-queens' placement, where 'Q' and '.' 
+both indicate a queen and an empty space respectively.  
+For example,  
+There exist two distinct solutions to the 4-queens puzzle:
+```
+[
+ [".Q..",  // Solution 1
+  "...Q",
+  "Q...",
+  "..Q."],
+
+ ["..Q.",  // Solution 2
+  "Q...",
+  "...Q",
+  ".Q.."]
+]
+```
+N皇后问题，行列斜线都不能有重复  
+解法同上数独游戏，用递归回溯
+
+```python
+class Solution(object):
+    def solveNQueens(self, n):
+        """
+        :type n: int
+        :rtype: List[List[str]]
+        """
+        out = []
+        import copy
+        def mark(i, temp):
+            if i == n:
+                tt = copy.deepcopy(temp)
+                tt = ["".join(lines) for lines in tt]
+                out.append(tt)
+                return
+            for j in range(n):  # 横着的n个位置，每个都试一下
+                for k in range(i):  # 往回的k行，每一行都验证一下
+                    if temp[k][j] == 'Q':  # 当前列的前面每一行不能有Q
+                        break
+                    if i-k-1 >= 0 and j-k-1 >= 0 and temp[i-k-1][j-k-1] == 'Q':  # 左斜上不能有Q
+                        break
+                    if i-k-1 >= 0 and j+k+1 < n and temp[i-k-1][j+k+1] == 'Q':  # 右斜上不能有Q
+                        break
+                else:  # 没有找到重复的Q，当前位置可以用
+                    temp[i][j] = 'Q'
+                    mark(i+1, temp)
+                    temp[i][j] = '.'
+        for i in range(n):  # 第一行，横着每个位置都试一下
+            temp = [['.' for _ in range(n)] for _ in range(n)]
+            temp[0][i] = 'Q'
+            mark(1, temp)
+        return out
 ```
 ---
 # [LeetCode] First Missing Positive 
