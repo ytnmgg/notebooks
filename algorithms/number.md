@@ -428,3 +428,25 @@ class Solution(object):
         else:
             return len(nums)+1
 ```
+---
+# [LeetCode] Maximum Subarray 
+> Find the contiguous subarray within an array (containing at least one number) which has the largest sum.  
+For example, given the array [-2,1,-3,4,-1,2,1,-5,4],  
+the contiguous subarray [4,-1,2,1] has the largest sum = 6. 
+
+求最大和子串，用动态规划
+
+```python
+class Solution(object):
+    def maxSubArray(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: int
+        """
+        maxSoFar = nums[0]  # 到目前为止的最大值
+        maxEndingHere = nums[0]  # 到目前为止，以当前值为结尾的最大值
+        for i in range(1,len(nums)):
+            maxEndingHere = max(maxEndingHere+nums[i], nums[i])
+            maxSoFar = max(maxSoFar, maxEndingHere)
+        return maxSoFar
+```
