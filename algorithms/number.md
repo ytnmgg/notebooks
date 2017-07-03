@@ -451,6 +451,39 @@ class Solution(object):
         return path[m-1][n-1]
 ```
 ---
+# [LeetCode] Minimum Path Sum 
+> Given a m x n grid filled with non-negative numbers, find a path from top left to bottom right which minimizes 
+the sum of all numbers along its path. Note: You can only move either down or right at any point in time.
+```
+|1|3|6|2|3|
+|3|1|2|4|1|
+|3|4|2|2|3|
+```
+类似上题，只是DP的演进不是保存路径数量，而是最小数字和。
+
+```python
+class Solution(object):
+    def minPathSum(self, grid):
+        """
+        :type grid: List[List[int]]
+        :rtype: int
+        """
+        m = len(grid)
+        n = len(grid[0])
+        path = [[0 for _ in range(n)] for _ in range(m)]  # 保存由左上到(i,j)的最小路径数字和
+        for i in range(m):
+            for j in range(n):
+                if i == 0 and j == 0:  # 左上角，直接一样
+                    path[i][j] = grid[i][j]
+                elif i == 0 and j > 0:  # 第一行，只有一种可能，直接加权和
+                    path[i][j] = path[i][j-1] + grid[i][j]
+                elif j == 0 and i > 0:  # 第一列，只有一种可能，直接加权和
+                    path[i][j] = path[i-1][j] + grid[i][j]
+                else:  # 其它位置，为左/上两个方向来的最小值，再加上该位置的值
+                    path[i][j] = min(path[i-1][j],path[i][j-1])+grid[i][j]
+        return path[m-1][n-1]
+```
+---
 # [LeetCode] First Missing Positive 
 > Given an unsorted integer array, find the first missing positive integer.  
 For example,  
