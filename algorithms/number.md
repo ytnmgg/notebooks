@@ -394,6 +394,63 @@ class Solution(object):
         return out
 ```
 ---
+# [LeetCode] Unique Paths 
+> A robot is located at the top-left corner of a m x n grid (marked 'Start' in the diagram below).
+The robot can only move either down or right at any point in time. The robot is trying to reach the 
+bottom-right corner of the grid (marked 'Finish' in the diagram below).How many possible unique paths are there?
+```
+|S| | | | |
+| | | | | |
+| | | | |E|
+```
+求S到E的可能路径，首先想到的就是递归回溯，每种路径都去试一下。
+
+```python
+class Solution(object):
+    def uniquePaths(self, m, n):
+        """
+        :type m: int
+        :type n: int
+        :rtype: int
+        """
+        direction = [(1, 0), (0, 1)]  # 可能的行动方向(i,j)，i表示向下移动，j表示向右移动
+        out = []
+        def dfs(i, j, temp):
+            if i == m-1 and j == n-1:  # 到达右下角
+                import copy
+                out.append(copy.deepcopy(temp))
+            for d in direction:  # 遍历方向数组，尝试可能的行动方向
+                newP = (i+d[0], j+d[1])  # 下一个位置
+                if newP[0] == m or newP[1] == n:  # 走到边框以外了
+                    continue
+                else:
+                    temp.append(newP)  # 该位置有效，存入temp中
+                    dfs(newP[0], newP[1], temp)  # 继续下一个位置的寻找
+                    temp.pop()  # 回溯
+        dfs(0, 0, [])
+        return len(out)
+```
+这种暴力搜寻在m和n较小的情况下可以，较大的m和n会导致超时，故考虑DP算法。  
+用`path[i][j]`保存从左上角到`(i,j)`位置的可能路径数量，因为只能向下和向右移动，故在`(i,j)`这一位置，  
+只能来自于左边或者上边两种可能。故`path[i][j]=path[i-1][j]+path[i][j-1]`
+```python
+class Solution(object):
+    def uniquePaths(self, m, n):
+        """
+        :type m: int
+        :type n: int
+        :rtype: int
+        """
+        path = [[0 for _ in range(n)] for _ in range(m)]  # 保存从左上角到(i,j)的可能路径数量
+        for i in range(m):
+            for j in range(n):
+                if i == 0 or j == 0:  # 第一行和第一列，都只能有一条路径
+                    path[i][j] = 1
+                else:
+                    path[i][j] = path[i-1][j] + path[i][j-1]
+        return path[m-1][n-1]
+```
+---
 # [LeetCode] First Missing Positive 
 > Given an unsorted integer array, find the first missing positive integer.  
 For example,  
