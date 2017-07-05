@@ -405,3 +405,53 @@ class Solution(object):
     
         return out
 ```
+---
+# [LeetCode] Edit Distance 
+> Given two words word1 and word2, find the minimum number of steps required to convert word1 to word2. 
+(each operation is counted as 1 step.) You have the following 3 operations permitted on a word:  
+a) Insert a character  
+b) Delete a character  
+c) Replace a character  
+
+典型DP问题，用`dp[i][j]`表示从`word1[0:i]`(第1个到第i-1个字符)到`word2[0:j]`所需的最小步数。  
+考虑边沿状态：  
+* `dp[0][0]` 表示`word1=word2=""`所需的转换步数，显然为`0`
+* `dp[i][0]` 表示`word2=""`所需的转换步数，此时对`word1`只能用delete操作，故`dp[i][0]=i`
+* `dp[0][j]` 表示`word1=""`所需的转换步数，此时对`word2`只能用delete操作，故`dp[0][j]=j`
+
+考虑完边沿状态，再来看普通状态：  
+* 如果当前字符相同，即`word1[i-1]=word2[i-1]`，则不需要做任何操作，即`dp[i][j]=dp[i-1][j-1]`
+* 如果不同，则要考虑题中的三种操作：
+  * Replace: 将`word1[i-1]`替换为`word2[j-1]`，使得`word1[0:i]=word2[0:j]`，则当前步数较前一步多1步，
+  即`dp[i][j]=dp[i-1][j-1]+1`
+  * Delete: 删除`word1[i-1]`，使得`word1[0:i-1]=word2[0:j]`，则当前步数为`word1[0:i-1] to word2[0:j]`的
+  步数再加删除这1步，即`dp[i][j]=dp[i-1][j]+1`
+  * Insert: 将`word2[j-1]`插入到`word1`中，使得`word1[0:i]+word2[j-1]=word2[0:j]`，则当前步数为
+  `word1[0:i] to word2[0:j-1]`的步数再加上插入这一步，即`dp[i][j]=dp[i][j-1]+1`
+
+  上面3种操作，取最小值即为dp的当前值。
+  
+```python
+class Solution(object):
+    def minDistance(self, word1, word2):
+        """
+        :type word1: str
+        :type word2: str
+        :rtype: int
+        """
+        m = len(word1)
+        n = len(word2)
+        dp = [[0]*(n+1) for _ in range(m+1)]  # dp中的(i,j)表示word中的(i-1,j-1)位置
+        for i in range(1, n+1):  # 初始化word1为空的情况
+            dp[0][i] = i
+        for i in range(1, m+1):  # 初始化word2为空的情况
+            dp[i][0] = i
+
+        for i in range(1, m+1):
+            for j in range(1, n+1):
+                if word1[i-1] == word2[j-1]:  # 当前字符相同，则不需要操作步数
+                    dp[i][j] = dp[i-1][j-1]
+                else:  # 否则从3中操作中取最小步数
+                    dp[i][j] = min(dp[i-1][j-1]+1, dp[i-1][j]+1, dp[i][j-1]+1)
+        return dp[m][n]
+```
