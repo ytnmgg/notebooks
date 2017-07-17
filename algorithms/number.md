@@ -540,3 +540,68 @@ class Solution(object):
             maxSoFar = max(maxSoFar, maxEndingHere)
         return maxSoFar
 ```
+---
+# [LeetCode] Combinations
+>  Given two integers n and k, return all possible combinations of k numbers out of 1 ... n.   
+For example, If n = 4 and k = 2, a solution is:
+```
+[
+  [2,4],
+  [3,4],
+  [2,3],
+  [1,2],
+  [1,3],
+  [1,4],
+]
+```
+
+使用移位法实现组合问题，首先初始化组数，长度为n，其前k个数为1，其它数为0，  
+然后从左往右扫描，找到第一个`01`，将其变为`10`，然后将其左边的所有`1`移动到数组最左端。  
+即可得到所有的组合,以`n=5,k=3`为例：
+```
+1 1 1 0 0 //1,2,3 
+1 1 0 1 0 //1,2,4 
+1 0 1 1 0 //1,3,4 
+0 1 1 1 0 //2,3,4 
+1 1 0 0 1 //1,2,5 
+1 0 1 0 1 //1,3,5 
+0 1 1 0 1 //2,3,5 
+1 0 0 1 1 //1,4,5 
+0 1 0 1 1 //2,4,5 
+0 0 1 1 1 //3,4,5
+```
+  
+```python
+import copy
+c = [1]*k + [0]*(n-k)  # 一种可能组合情况
+temp = [[i for i in c]]  # 保存01的数组
+while True:
+    ones = 0  # 找到第一个10时，其左边的1的个数
+    p = 0  # 找到第一个10的位置
+    for i in range(n-1):
+        if c[i] == 1:
+            ones += 1  # 保存1的个数
+        if c[i] == 1 and c[i+1] == 0:  # 第一个10
+            c[i], c[i+1] = 0, 1  # 将第一个10换做01
+            p = i
+            break
+    else:
+        break  # 未找到10，结束while循环
+    
+    # 将第一个10的左边所有的1移动到数组最左端
+    for i in range(p):
+        if i < ones-1:
+            c[i] = 1
+        else:
+            c[i] = 0
+    temp.append(copy.copy(c))  # 将一种组合保存
+
+result = []
+for i in range(len(temp)):  # 由移位后的10组合挑选出最终组合结果
+    result.append([])
+    for j in range(len(temp[i])):
+        if temp[i][j] == 1:
+            result[i].append(j+1)
+
+return result
+```
