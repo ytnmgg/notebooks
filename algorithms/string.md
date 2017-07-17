@@ -455,3 +455,43 @@ class Solution(object):
                     dp[i][j] = min(dp[i-1][j-1]+1, dp[i-1][j]+1, dp[i][j-1]+1)
         return dp[m][n]
 ```
+---
+# [LeetCode] Minimum Window Substring 
+> Given a string S and a string T, find the minimum window in S which will contain all the 
+characters in T in complexity O(n).  
+For example,  
+S = "ADOBECODEBANC"  
+T = "ABC"  
+Minimum window is "BANC"  
+Note:
+If there is no such window in S that covers all characters in T, return the empty string "".  
+If there are multiple such windows, you are guaranteed that there will always be only one unique minimum window in S. 
+
+滑动窗口法取最短包含子串
+  
+```python
+    import collections
+    
+    # need为hash，保存每个字符还需要的个数
+    # missing为int，保存总的字符需要的个数
+    need, missing = collections.Counter(t), len(t)
+    
+    # s[i:j]是当前窗口，s[I:J]是最终结果
+    i = I = J = 0
+    
+    for j, c in enumerate(s, 1):
+        if need[c] > 0:  # 找到一个字符，总需求满足一个，故减1
+            missing -= 1
+        need[c] -= 1  # 该字符需求个数减1，因为是Counter，故不存在的字符的初始值为0
+        
+        # 如果总需求个数递减为0，即找到了所有的，则移动当前滑动窗口的左边界，
+        # 使得滑窗左边界落到下一个合适的字符上，这里的下一个合适位置选取比较有技巧
+        if missing <= 0:
+            while i<j and need[s[i]]<0:
+                need[s[i]] += 1
+                i += 1
+            # not J表示初始状态，j-i<=J-I表示取最短子串，保存至最终结果I,J
+            if not J or j-i <= J-I:
+                I,J = i,j
+    return s[I:J]
+```
