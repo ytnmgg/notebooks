@@ -1,5 +1,5 @@
-1. 实现一个LRU
-LRU：使用最少的淘汰，比如Redis或者Google Guava等都使用这种策略
+# [LinkedList] 实现一个LRU
+LRU：缓存策略，使用最少的淘汰，比如Redis或者Google Guava等都使用这种策略
 
 可以基于LinkedList来实现LRU，因为LinkedList基于双向链表，可以考虑把最长使用的放到队头，每次淘汰队尾
 ```java
