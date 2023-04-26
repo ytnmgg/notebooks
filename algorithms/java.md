@@ -18,6 +18,7 @@ LRU：缓存策略，使用最少的淘汰，比如Redis或者Google Guava等都
     }
 
     public void add(String item) {
+        // 超了，删掉队尾的最不常访问的
         if (lru.size() >= MAX_LEN) {
             lru.removeLast();
         }
