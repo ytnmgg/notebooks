@@ -1,3 +1,15 @@
+## 红黑树5大性质
+1. 节点是红色或黑色
+2. 根节点是黑色
+3. 所有叶子都是黑色（叶子是NIL节点，一般不画出来）
+4. 每个红色节点必须有两个黑色的子节点（从每个叶子到根的所有路径不能有两个连续的红节点）
+5. 从任一节点到每个叶子路径包含相同数量的黑节点（黑平衡）
+
+
+234树与红黑树的对应关系（基础原则要记牢）
+![234_redblack.jpg](https://raw.githubusercontent.com/ytnmgg/notebooks/algorithms/image/234_redblack.jpg)
+
+
 ## 插入新节点
 ```java
 public V put(K key, V value) {
@@ -59,7 +71,8 @@ public V put(K key, V value) {
         } while (t != null);
     }
 
-    // 已经找到位置，new一个新节点出来（e的parent指向刚刚一直跟着走的parent指针指向的位置）
+    // 没有发现已经存在的key，且已经到了应该追加的位置
+    // new一个新节点出来（e的parent指向刚刚一直跟着走的parent指针指向的位置）
     Entry<K,V> e = new Entry<>(key, value, parent);
     // 根据t在parent的左下边还是右下边，决定parent的孩子节点的指向
     // 插入之前，parent的左孩或右孩节点应该是指向空的，现在需要指向新增的e节点
@@ -75,6 +88,8 @@ public V put(K key, V value) {
     return null;
 }
 ```
+### 新增节点的几种情况：
+
 
 ## 插入新节点后进行调整
 ```java
