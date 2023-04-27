@@ -20,7 +20,7 @@ public V put(K key, V value) {
     // split comparator and comparable paths
     Comparator<? super K> cpr = comparator;
     if (cpr != null) {
-        // 自定义比较器的逻辑
+        // 选择1：自定义比较器的逻辑
         do {
             parent = t;
             cmp = cpr.compare(key, t.key);
@@ -33,22 +33,26 @@ public V put(K key, V value) {
         } while (t != null);
     }
     else {
-        // 使用系统比较器的逻辑
+        // 选择2：使用系统比较器的逻辑
         if (key == null)
             throw new NullPointerException();
         @SuppressWarnings("unchecked")
             Comparable<? super K> k = (Comparable<? super K>) key;
 
         do {
-            // parent指向t的当前位置
+            // parent指向t的当前位置（从root开始往下找）
             parent = t;
+            // 插入的key和当前位置（从root开始）比较
             cmp = k.compareTo(t.key);
             // 根据key的比较，决定t往左下寻找还是往右下寻找
             if (cmp < 0)
+                // t往当前节点的左边往下找
                 t = t.left;
             else if (cmp > 0)
+                // t往当前节点的右边往下找
                 t = t.right;
             else
+                // 因为是map，key唯一，出现key相同，则直接覆盖value
                 return t.setValue(value);
         
         // 如果t已经到了叶子节点（最后一层节点的再下面的空节点），退出循环
@@ -75,8 +79,11 @@ public V put(K key, V value) {
 ## 插入新节点后进行调整
 ```java
 private void fixAfterInsertion(Entry<K,V> x) {
+    // 新增节点都是红色的
     x.color = RED;
 
+    // 1. 如果插入的是第一个节点（root节点），则不用处理，直接结束
+    // 2. 如果不是root节点，则一定有parent，
     while (x != null && x != root && x.parent.color == RED) {
         if (parentOf(x) == leftOf(parentOf(parentOf(x)))) {
             Entry<K,V> y = rightOf(parentOf(parentOf(x)));
@@ -112,6 +119,8 @@ private void fixAfterInsertion(Entry<K,V> x) {
             }
         }
     }
+
+    // 根节点一定是黑色的
     root.color = BLACK;
 }
 ```
