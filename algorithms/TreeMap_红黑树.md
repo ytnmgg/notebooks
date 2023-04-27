@@ -110,8 +110,8 @@ private void fixAfterInsertion(Entry<K,V> x) {
     // 上面2/3/4几种情况中，父亲是黑色的情况，都不需要调整
     while (x != null && x != root && x.parent.color == RED) {
         // 插入节点的父亲是爷爷的左孩，有几种可能
-        // 1. 情况3的A、B
-        // 2. 情况4的A、B
+        // 1. 情况3的A/B
+        // 2. 情况4的A/B
         if (parentOf(x) == leftOf(parentOf(parentOf(x)))) {
             // 叔叔节点
             Entry<K,V> y = rightOf(parentOf(parentOf(x)));
@@ -123,28 +123,48 @@ private void fixAfterInsertion(Entry<K,V> x) {
                 setColor(parentOf(x), BLACK);
                 setColor(y, BLACK);
                 setColor(parentOf(parentOf(x)), RED);
+
+                // x指向爷爷，从下往上调整
+                // 为什么爷爷要调整，因为爷爷变色了，可能影响和他关联的更高层的黑平衡
+                // 为什么父亲或叔叔不需要调整，因为刚刚叔叔和父亲是一起变色的，所以由父亲或叔叔出发的子节点路径的黑色个数是一起变的，不打破黑平衡；其它路径都由爷爷关联，交给爷爷及后续的调整
                 x = parentOf(parentOf(x));
             } else {
                 // 情况3的A/B，叔叔不存在
                 // 注意colorOf默认是黑色，即叔叔节点不存在会进入这个else逻辑
 
                 // 情况3的B，以x的父亲为中心左旋
+                // x的父亲降下去到x的兄弟位置，x的父亲的右孩（x）顶替原父亲位置
+                // 结果就是变成情况3的A
                 if (x == rightOf(parentOf(x))) {
                     x = parentOf(x);
                     rotateLeft(x);
                 }
+
+                // 接下来情况3的A和B都按A处理
+                // 变色：x的父亲变黑，爷爷变红
                 setColor(parentOf(x), BLACK);
                 setColor(parentOf(parentOf(x)), RED);
+
+                // 为什么变成红黑红以后，还不是终态呢？
+                // 因为这个else逻辑分支是叔叔不存在，则爷爷的右孩分支路径比父亲的任意分支路径少一个黑色，没有黑平衡（或者说违背了性质4：每个红色节点必须有两个黑色的子节点）
+
+                // 所以变色后的A要右旋，变成C，成为稳定态
                 rotateRight(parentOf(parentOf(x)));
             }
         } else {
+            // 情况3：D/E 或情况4：C/D
+
+            // 叔叔节点
             Entry<K,V> y = leftOf(parentOf(parentOf(x)));
+
             if (colorOf(y) == RED) {
+                // 情况4：C/D，类似上面情况4：A/B处理
                 setColor(parentOf(x), BLACK);
                 setColor(y, BLACK);
                 setColor(parentOf(parentOf(x)), RED);
                 x = parentOf(parentOf(x));
             } else {
+                // 情况3的D/E，类似上面情况3：A/B处理
                 if (x == leftOf(parentOf(x))) {
                     x = parentOf(x);
                     rotateRight(x);
@@ -166,7 +186,7 @@ private void fixAfterInsertion(Entry<K,V> x) {
 ```java
 private void rotateLeft(Entry<K,V> p) {
     if (p != null) {
-        // 右旋，p落下去，p的右孩顶替它的原来位置
+        // 左旋，p落下去（到原来的左孩位置），p的右孩顶替它的原来位置
         Entry<K,V> r = p.right;
 
         // p的右孩的左孩挂到p的右孩
@@ -197,7 +217,7 @@ private void rotateLeft(Entry<K,V> p) {
 
 private void rotateRight(Entry<K,V> p) {
     if (p != null) {
-        // 右旋，p落下去，p的左孩顶替它的原来位置
+        // 右旋，p落下去（到原来的右孩位置），p的左孩顶替它的原来位置
         Entry<K,V> l = p.left;
 
         // p的左孩的右孩挂到p的左孩
