@@ -7,7 +7,7 @@
 
 
 234树与红黑树的对应关系（基础原则要记牢）
-![234_redblack.jpg](https://raw.githubusercontent.com/ytnmgg/notebooks/algorithms/image/234_redblack.jpg)
+![234_redblack.jpg](https://raw.githubusercontent.com/ytnmgg/notebooks/master/algorithms/image/234_redblack.jpg)
 
 
 ## 插入新节点
