@@ -93,6 +93,7 @@ public V put(K key, V value) {
 ![234_redblack_3.jpg](https://raw.githubusercontent.com/ytnmgg/notebooks/master/algorithms/image/234_redblack_3.jpg)
 ![234_redblack_4.jpg](https://raw.githubusercontent.com/ytnmgg/notebooks/master/algorithms/image/234_redblack_4.jpg)
 
+
 1. 新增的是第一个节点：无需调整，默认就是黑色
 2. 234树是2节点，新增节点与之合并成3节点：新增红色，父亲黑色，上黑下红规则满足，无需调整
 3. 234树是3节点，新增节点与之合并成4节点：新增红色，如果父亲红色，需要调整；如果父亲黑色，不需要调整
@@ -109,19 +110,25 @@ private void fixAfterInsertion(Entry<K,V> x) {
     // 上面2/3/4几种情况中，父亲是黑色的情况，都不需要调整
     while (x != null && x != root && x.parent.color == RED) {
         // 插入节点的父亲是爷爷的左孩，有几种可能
-        // 1. 上面第三种情况的第2图，左斜线，或其变形（未画，插入的是1.5，和0.5的区别是挂在1的右孩位置）
-        // 2. 上面第四种情况的一个变形（未画），即插入的不是4，而是0.5或1.5，应该挂在1的左孩位置
+        // 1. 情况3的A、B
+        // 2. 情况4的A、B
         if (parentOf(x) == leftOf(parentOf(parentOf(x)))) {
             // 叔叔节点
             Entry<K,V> y = rightOf(parentOf(parentOf(x)));
-            // 注意colorOf默认是黑色，即叔叔节点不存在，也按黑色进入下面else逻辑
+            
             if (colorOf(y) == RED) {
-                // 第3种情况第2图的一个变形，插入节点是其父亲的右孩
+                // 情况4的A/B，叔叔存在
+                // 这种变化颜色即可: 爷爷变成红（爷爷如果是root，最后还是会变黑），父亲和叔叔变黑
+                // 为什么不插入的x变黑就行了？这样的话就不黑平衡了，父亲分支路径黑色会比叔叔分支黑色多一个,所以要求新增的节点都是红色
                 setColor(parentOf(x), BLACK);
                 setColor(y, BLACK);
                 setColor(parentOf(parentOf(x)), RED);
                 x = parentOf(parentOf(x));
             } else {
+                // 情况3的A/B，叔叔不存在
+                // 注意colorOf默认是黑色，即叔叔节点不存在会进入这个else逻辑
+
+                // 情况3的B，以x的父亲为中心左旋
                 if (x == rightOf(parentOf(x))) {
                     x = parentOf(x);
                     rotateLeft(x);
@@ -151,5 +158,69 @@ private void fixAfterInsertion(Entry<K,V> x) {
 
     // 根节点一定是黑色的
     root.color = BLACK;
+}
+```
+
+
+## 旋转算法
+```java
+private void rotateLeft(Entry<K,V> p) {
+    if (p != null) {
+        // 右旋，p落下去，p的右孩顶替它的原来位置
+        Entry<K,V> r = p.right;
+
+        // p的右孩的左孩挂到p的右孩
+        // 因为旋转前，p的右孩（r）及其子孙都比p大，大小关系：p的右孩>p的右孩的左孩>p
+        // 所以旋转后，p的右孩（r）占了p的原有位置，r的原左孩及p都位于r的左侧，但是p更小，所以r的原左孩新的位置是p的右孩（大小介于p和r之间）
+        p.right = r.left;
+
+        // 双向指针，还需要反着指一下
+        if (r.left != null)
+            r.left.parent = p;
+
+        // r占了p的位置，双向指针，r的父需要改成原p的父
+        r.parent = p.parent;
+
+        // 双向指针，还需要反着指一下（需要分左右两种情况）
+        if (p.parent == null)
+            root = r;
+        else if (p.parent.left == p)
+            p.parent.left = r;
+        else
+            p.parent.right = r;
+
+        // 双向指针，r的左指向p，p的父指向r 
+        r.left = p;
+        p.parent = r;
+    }
+}
+
+private void rotateRight(Entry<K,V> p) {
+    if (p != null) {
+        // 右旋，p落下去，p的左孩顶替它的原来位置
+        Entry<K,V> l = p.left;
+
+        // p的左孩的右孩挂到p的左孩
+        // 因为旋转前，p的左孩（l）及其子孙都比p小，大小关系：p的左孩<p的左孩的右孩<p
+        // 所以旋转后，p的左孩（l）占了p的原有位置，l的原右孩及p都位于l的右侧，但是p更大，所以l的原右孩新的位置是p的左孩（大小介于l和p之间）
+        p.left = l.right;
+
+        // 双向指针，还需要反着指一下
+        if (l.right != null) l.right.parent = p;
+
+        // l占了p的位置，双向指针，l的父需要改成原p的父
+        l.parent = p.parent;
+
+        // 双向指针，还需要反着指一下（需要分左右两种情况）
+        if (p.parent == null)
+            root = l;
+        else if (p.parent.right == p)
+            p.parent.right = l;
+        else p.parent.left = l;
+
+        // 双向指针，l的右指向p，p的父指向l
+        l.right = p;
+        p.parent = l;
+    }
 }
 ```
