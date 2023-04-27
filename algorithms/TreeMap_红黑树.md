@@ -89,7 +89,7 @@ public V put(K key, V value) {
 }
 ```
 ### 新增节点的几种情况：
-
+![234_redblack_2.jpg](https://raw.githubusercontent.com/ytnmgg/notebooks/master/algorithms/image/234_redblack_2.jpg)
 
 
 ## 插入新节点后进行调整
