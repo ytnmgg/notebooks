@@ -90,6 +90,13 @@ public V put(K key, V value) {
 ```
 ### 新增节点的几种情况：
 ![234_redblack_2.jpg](https://raw.githubusercontent.com/ytnmgg/notebooks/master/algorithms/image/234_redblack_2.jpg)
+![234_redblack_3.jpg](https://raw.githubusercontent.com/ytnmgg/notebooks/master/algorithms/image/234_redblack_3.jpg)
+![234_redblack_4.jpg](https://raw.githubusercontent.com/ytnmgg/notebooks/master/algorithms/image/234_redblack_4.jpg)
+
+1. 新增的是第一个节点：无需调整，默认就是黑色
+2. 234树是2节点，新增节点与之合并成3节点：新增红色，父亲黑色，上黑下红规则满足，无需调整
+3. 234树是3节点，新增节点与之合并成4节点：新增红色，如果父亲红色，需要调整；如果父亲黑色，不需要调整
+4. 234树是4节点，新增节点发生裂变：原4节点对应的红黑树是稳定的上黑下红形态，所以新增的红色节点父亲一定是红色，需要调整
 
 
 ## 插入新节点后进行调整
@@ -98,12 +105,18 @@ private void fixAfterInsertion(Entry<K,V> x) {
     // 新增节点都是红色的
     x.color = RED;
 
-    // 1. 如果插入的是第一个节点（root节点），则不用处理，直接结束
-    // 2. 如果不是root节点，则一定有parent，
+    // 父亲是红色，新加的又是红色，出现红红相连，才需要调整
+    // 上面2/3/4几种情况中，父亲是黑色的情况，都不需要调整
     while (x != null && x != root && x.parent.color == RED) {
+        // 插入节点的父亲是爷爷的左孩，有几种可能
+        // 1. 上面第三种情况的第2图，左斜线，或其变形（未画，插入的是1.5，和0.5的区别是挂在1的右孩位置）
+        // 2. 上面第四种情况的一个变形（未画），即插入的不是4，而是0.5或1.5，应该挂在1的左孩位置
         if (parentOf(x) == leftOf(parentOf(parentOf(x)))) {
+            // 叔叔节点
             Entry<K,V> y = rightOf(parentOf(parentOf(x)));
+            // 注意colorOf默认是黑色，即叔叔节点不存在，也按黑色进入下面else逻辑
             if (colorOf(y) == RED) {
+                // 第3种情况第2图的一个变形，插入节点是其父亲的右孩
                 setColor(parentOf(x), BLACK);
                 setColor(y, BLACK);
                 setColor(parentOf(parentOf(x)), RED);
