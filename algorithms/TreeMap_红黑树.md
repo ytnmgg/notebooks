@@ -181,6 +181,140 @@ private void fixAfterInsertion(Entry<K,V> x) {
 ```
 
 
+## 删除节点
+
+### 二叉树的删除有以下几种情况
+1. 删除叶子节点，直接删除操作
+2. 删除的节点有一个子节点，则用子节点替换被删的节点
+3. 删除的节点有两个子节点，则需要找到"前驱"或"后继"节点来替换
+
+
+```java
+public V remove(Object key) {
+    Entry<K,V> p = getEntry(key);
+    if (p == null)
+        return null;
+
+    V oldValue = p.value;
+    deleteEntry(p);
+    return oldValue;
+}
+
+private void deleteEntry(Entry<K,V> p) {
+    modCount++;
+    size--;
+
+    // If strictly internal, copy successor's element to p and then make p
+    // point to successor.
+    if (p.left != null && p.right != null) {
+        Entry<K,V> s = successor(p);
+        p.key = s.key;
+        p.value = s.value;
+        p = s;
+    } // p has 2 children
+
+    // Start fixup at replacement node, if it exists.
+    Entry<K,V> replacement = (p.left != null ? p.left : p.right);
+
+    if (replacement != null) {
+        // Link replacement to parent
+        replacement.parent = p.parent;
+        if (p.parent == null)
+            root = replacement;
+        else if (p == p.parent.left)
+            p.parent.left  = replacement;
+        else
+            p.parent.right = replacement;
+
+        // Null out links so they are OK to use by fixAfterDeletion.
+        p.left = p.right = p.parent = null;
+
+        // Fix replacement
+        if (p.color == BLACK)
+            fixAfterDeletion(replacement);
+    } else if (p.parent == null) { // return if we are the only node.
+        root = null;
+    } else { //  No children. Use self as phantom replacement and unlink.
+        if (p.color == BLACK)
+            fixAfterDeletion(p);
+
+        if (p.parent != null) {
+            if (p == p.parent.left)
+                p.parent.left = null;
+            else if (p == p.parent.right)
+                p.parent.right = null;
+            p.parent = null;
+        }
+    }
+}
+```
+
+## 删除节点后进行调整
+```java
+private void fixAfterDeletion(Entry<K,V> x) {
+    while (x != root && colorOf(x) == BLACK) {
+        if (x == leftOf(parentOf(x))) {
+            Entry<K,V> sib = rightOf(parentOf(x));
+
+            if (colorOf(sib) == RED) {
+                setColor(sib, BLACK);
+                setColor(parentOf(x), RED);
+                rotateLeft(parentOf(x));
+                sib = rightOf(parentOf(x));
+            }
+
+            if (colorOf(leftOf(sib))  == BLACK &&
+                colorOf(rightOf(sib)) == BLACK) {
+                setColor(sib, RED);
+                x = parentOf(x);
+            } else {
+                if (colorOf(rightOf(sib)) == BLACK) {
+                    setColor(leftOf(sib), BLACK);
+                    setColor(sib, RED);
+                    rotateRight(sib);
+                    sib = rightOf(parentOf(x));
+                }
+                setColor(sib, colorOf(parentOf(x)));
+                setColor(parentOf(x), BLACK);
+                setColor(rightOf(sib), BLACK);
+                rotateLeft(parentOf(x));
+                x = root;
+            }
+        } else { // symmetric
+            Entry<K,V> sib = leftOf(parentOf(x));
+
+            if (colorOf(sib) == RED) {
+                setColor(sib, BLACK);
+                setColor(parentOf(x), RED);
+                rotateRight(parentOf(x));
+                sib = leftOf(parentOf(x));
+            }
+
+            if (colorOf(rightOf(sib)) == BLACK &&
+                colorOf(leftOf(sib)) == BLACK) {
+                setColor(sib, RED);
+                x = parentOf(x);
+            } else {
+                if (colorOf(leftOf(sib)) == BLACK) {
+                    setColor(rightOf(sib), BLACK);
+                    setColor(sib, RED);
+                    rotateLeft(sib);
+                    sib = leftOf(parentOf(x));
+                }
+                setColor(sib, colorOf(parentOf(x)));
+                setColor(parentOf(x), BLACK);
+                setColor(leftOf(sib), BLACK);
+                rotateRight(parentOf(x));
+                x = root;
+            }
+        }
+    }
+
+    setColor(x, BLACK);
+}
+```
+
+
 ## 旋转算法
 ```java
 private void rotateLeft(Entry<K,V> p) {
@@ -240,6 +374,59 @@ private void rotateRight(Entry<K,V> p) {
         // 双向指针，l的右指向p，p的父指向l
         l.right = p;
         p.parent = l;
+    }
+}
+```
+
+## 查找算法
+### 查前驱
+![234_redblack_5.jpg](https://raw.githubusercontent.com/ytnmgg/notebooks/master/algorithms/image/234_redblack_5.jpg)
+
+前驱是指小于当前节点的集合中最大的节点
+1. 比当前节点小的节点一定在其左侧，可能是孩子及子孙，也可能是父亲及祖辈
+2. 如果有左孩或子孙，前驱一定在这里面，因为当前节点包括左孩及子孙一定比当前节点的
+```java
+static <K,V> Entry<K,V> predecessor(Entry<K,V> t) {
+    if (t == null)
+        return null;
+    else if (t.left != null) {
+        // 如果有左孩，则找左孩中最右的那个
+        Entry<K,V> p = t.left;
+        while (p.right != null)
+            p = p.right;
+        return p;
+    } else {
+        // 没有左孩，再找左父
+        // 因为左父一定小于当前节点
+        Entry<K,V> p = t.parent;
+        Entry<K,V> ch = t;
+        while (p != null && ch == p.left) {
+            ch = p;
+            p = p.parent;
+        }
+        return p;
+    }
+}
+```
+### 查后驱
+后驱是指大于当前节点的集合中最小的节点
+```java
+static <K,V> TreeMap.Entry<K,V> successor(Entry<K,V> t) {
+    if (t == null)
+        return null;
+    else if (t.right != null) {
+        Entry<K,V> p = t.right;
+        while (p.left != null)
+            p = p.left;
+        return p;
+    } else {
+        Entry<K,V> p = t.parent;
+        Entry<K,V> ch = t;
+        while (p != null && ch == p.right) {
+            ch = p;
+            p = p.parent;
+        }
+        return p;
     }
 }
 ```
