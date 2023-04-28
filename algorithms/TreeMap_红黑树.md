@@ -7,7 +7,7 @@
 
 
 234树与红黑树的对应关系（基础原则要记牢）
-![234_redblack.jpg](https://raw.githubusercontent.com/ytnmgg/notebooks/master/algorithms/image/234_redblack.jpg)
+<img src="image/234_redblack.jpg">
 
 
 ## 插入新节点
@@ -89,9 +89,9 @@ public V put(K key, V value) {
 }
 ```
 ### 新增节点的几种情况：
-![234_redblack_2.jpg](https://raw.githubusercontent.com/ytnmgg/notebooks/master/algorithms/image/234_redblack_2.jpg)
-![234_redblack_3.jpg](https://raw.githubusercontent.com/ytnmgg/notebooks/master/algorithms/image/234_redblack_3.jpg)
-![234_redblack_4.jpg](https://raw.githubusercontent.com/ytnmgg/notebooks/master/algorithms/image/234_redblack_4.jpg)
+<img src="image/234_redblack_2.jpg">
+<img src="image/234_redblack_3.jpg">
+<img src="image/234_redblack_4.jpg">
 
 
 1. 新增的是第一个节点：无需调整，默认就是黑色
@@ -384,9 +384,10 @@ private void rotateRight(Entry<K,V> p) {
 > 中序遍历：左、中、右
 https://blog.csdn.net/u014384625/article/details/117983045?spm=1001.2014.3001.5502
 
+
 不管是查前驱还是查后驱，牢记中序遍历走法，找离自己最近的那个点即可。
 
-![234_redblack_5.jpg](https://raw.githubusercontent.com/ytnmgg/notebooks/master/algorithms/image/234_redblack_5.jpg)
+<img src="image/234_redblack_5.jpg">
 
 前驱是指小于当前节点的集合中最大的节点
 
