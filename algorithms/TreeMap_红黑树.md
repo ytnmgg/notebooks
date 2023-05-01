@@ -184,9 +184,18 @@ private void fixAfterInsertion(Entry<K,V> x) {
 ## 删除节点
 
 ### 二叉树的删除有以下几种情况
-1. 删除叶子节点，直接删除操作
-2. 删除的节点有一个子节点，则用子节点替换被删的节点
-3. 删除的节点有两个子节点，则需要找到"前驱"或"后继"节点来替换
+- 情况1. 删除叶子节点，直接删除操作
+- 情况2. 删除的节点有一个子节点，则用子节点替换被删的节点
+- 情况3. 删除的节点有两个子节点，则需要找到"前驱"或"后继"节点来替换待删除节点
+
+<img src="image/234_redblack_6.jpg">
+
+情况3理论上是用前驱或后继节点替换当前待删除节点，还有个简化版的“复制值”方案（这里以后继节点为例，前驱节点类似）：
+
+删除当前节点，等价于用B节点的kv值覆盖到当前节点，然后再删除B节点。此时删除B节点，如果其子节点C节点存在，则等价于情况2，否则等价于情况1。
+
+- 注意1：情况3中，B节点要么没有子节点C，要么只有一个子节点C，不可能有两个子节点，否则另外一个子节点更有资格成为后继节点。
+- 注意2：情况3中，虽然根据后继节点查找法可能来源于右子节点，也可能来源于右父节点，但是情况3这里后继节点不可能来源于待删节点的父节点，因为前提是待删节点有2个子节点，根据后面讲的后继节点查找法可以看到，子节点更优先于父节点成为前驱或后继节点。
 
 
 ```java
@@ -203,21 +212,31 @@ public V remove(Object key) {
 private void deleteEntry(Entry<K,V> p) {
     modCount++;
     size--;
-
-    // If strictly internal, copy successor's element to p and then make p
-    // point to successor.
+    
+    // 情况3，待删节点有2个子节点，用后继节点替换该节点
+    // 由前面分析知，情况3的后继节点不可能有2个子节点（否则其中一个子节点更靠近待删除节点，更有资格是后继节点）
+    // 所以情况3进行值替换后，待删除节点变成了只有1个子节点或没有子节点的后继节点，退化成情况2或情况1
     if (p.left != null && p.right != null) {
         Entry<K,V> s = successor(p);
+        // 这里用“节点替换操作”的简化版操作，直接复制后继节点的值然后删除后继节点
         p.key = s.key;
         p.value = s.value;
+
+        // 删除后继节点(把p指向后继节点，和后续操作合并)
         p = s;
-    } // p has 2 children
+    }
+
+    // 如果是情况3：处理完成后，p指向后继节点，退化到情况1或情况2
+    // 如果本来就是情况1或情况2，从这里开始处理
 
     // Start fixup at replacement node, if it exists.
     Entry<K,V> replacement = (p.left != null ? p.left : p.right);
 
     if (replacement != null) {
-        // Link replacement to parent
+        // 情况2：待删节点有一个子节点
+        // 用子节点替换原待删节点
+
+        // 双向指针互相指
         replacement.parent = p.parent;
         if (p.parent == null)
             root = replacement;
@@ -229,15 +248,22 @@ private void deleteEntry(Entry<K,V> p) {
         // Null out links so they are OK to use by fixAfterDeletion.
         p.left = p.right = p.parent = null;
 
-        // Fix replacement
+        // 只有删除的是黑色才需要调整
+        // 1. 删了黑色才有可能导致黑平衡失败（不同路径黑色节点个数不同）
+        // 2. 删了黑色才有可能导致两个红色挨着
         if (p.color == BLACK)
             fixAfterDeletion(replacement);
+
     } else if (p.parent == null) { // return if we are the only node.
+        // 只有根节点的父节点为空，删除当前节点就是删除根节点
         root = null;
     } else { //  No children. Use self as phantom replacement and unlink.
+        // 进入这里，表示待删节点没有子节点，直接删除p就行，但是这里和调整做了点合并逻辑，写到一起了
+        
         if (p.color == BLACK)
             fixAfterDeletion(p);
 
+        // 双向指针互删
         if (p.parent != null) {
             if (p == p.parent.left)
                 p.parent.left = null;
