@@ -7,7 +7,7 @@
 
 
 234树与红黑树的对应关系（基础原则要记牢）
-<img src="image/234_redblack.jpg">
+<img src="./image/234_redblack.jpg">
 
 
 # 插入新节点
@@ -90,9 +90,9 @@ public V put(K key, V value) {
 ```
 ## 新增节点的几种情况：
 
-<img src="image/234_redblack_2.jpg">
-<img src="image/234_redblack_3.jpg">
-<img src="image/234_redblack_4.jpg">
+<img src="./image/234_redblack_2.jpg">
+<img src="./image/234_redblack_3.jpg">
+<img src="./image/234_redblack_4.jpg">
 
 
 1. 新增的是第一个节点：无需调整，默认就是黑色
@@ -189,7 +189,7 @@ private void fixAfterInsertion(Entry<K,V> x) {
 - 情况2. 删除的节点有一个子节点，则用子节点替换被删的节点
 - 情况3. 删除的节点有两个子节点，则需要找到"前驱"或"后继"节点来替换待删除节点
 
-<img src="image/234_redblack_6.jpg">
+<img src="./image/234_redblack_6.jpg">
 
 情况3理论上是用前驱或后继节点替换当前待删除节点，还有个简化版的“复制值”方案（这里以后继节点为例，前驱节点类似）：
 
@@ -289,7 +289,7 @@ private void deleteEntry(Entry<K,V> p) {
 
 情况1：
 
-<img src="image/234_redblack_7.jpg">
+<img src="./image/234_redblack_7.jpg">
 
 上图中S为后继节点，由后继节点性质知道S一定没有左孩，否则左孩更有资格成为后继节点。同时，假设S是红色的，如图A，则X不能为红（红红相连违背原则），X也不能是黑，否则A-S-nil路径的黑色比A-S-X路径的黑色少，违背黑平衡。所以A图不存在，所以只能是B图情况，X是红色，因为X是红色，那么X不能有红色节点，否则又违背了红红不能相连的原则，同时X也不能有黑色节点，否则又违背了黑平衡原则，所以B图中，X不能有子节点。
 
@@ -302,7 +302,7 @@ private void deleteEntry(Entry<K,V> p) {
 
 这里假设兄弟节点在右边：
 
-<img src="image/234_redblack_8.jpg">
+<img src="./image/234_redblack_8.jpg">
 
 - 分析2-1：兄弟是红色的，此时父节点一定是黑的，否则会红红相连；兄弟的子节点一定是左孩右孩都存在且都是黑色，否则不黑平衡（P-x路径已经两个黑了）。这种情况，可以把父节点和兄弟节点交换颜色，然后把父节点左旋，则等价于后续的兄弟是黑色的场景，此时兄弟节点变成了C节点
 - 分析2-2：兄弟黑色的，父亲红色的，此时兄弟的子节点不可能为黑，否则不黑平衡。假设兄弟节点没有孩子，则把兄弟节点变成红色，父节点改成黑色，x节点可以直接删除，不改变黑平衡
@@ -469,7 +469,7 @@ https://blog.csdn.net/u014384625/article/details/117983045?spm=1001.2014.3001.55
 
 不管是查前驱还是查后驱，牢记中序遍历走法，找离自己最近的那个点即可。
 
-<img src="image/234_redblack_5.jpg">
+<img src="./image/234_redblack_5.jpg">
 
 前驱是指小于当前节点的集合中最大的节点
 
