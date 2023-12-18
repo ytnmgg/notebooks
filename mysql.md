@@ -649,6 +649,245 @@ FROM
 WHERE DATEDIFF(visited_on, (SELECT MIN(visited_on) FROM Customer)) >= 6
 ```
 
+## 排序
+RANK，DENSE_RANK、ROW_NUMBER
+区别：
+- RANK 并列跳跃排名，并列即相同的值，相同的值保留重复名次，遇到下一个不同值时，跳跃到总共的排名。
+- DENSE_RANK 并列连续排序，并列即相同的值，相同的值保留重复名次，遇到下一个不同值时，依然按照连续数字排名。
+- ROW_NUMBER 连续排名，即使相同的值，依旧按照连续数字进行排名
+
+如图：
+```sql
++-----------+-----------+------------+--------------+
+| VALUE     | RNAK      | DENSE_RANK | ROW_NUMBER   |
++-----------+-----------+------------+--------------+
+| 70        | 1         | 1          | 1            |
+| 70        | 1         | 1          | 2            |
+| 70        | 1         | 1          | 3            |
+| 75        | 4         | 2          | 4            |
+| 80        | 5         | 3          | 5            |
+| 90        | 6         | 4          | 6            |
++-----------+-----------+------------+--------------+
+
+```
+
+> 例子：
+公司的主管们感兴趣的是公司每个部门中谁赚的钱最多。一个部门的 高收入者 是指一个员工的工资在该部门的 不同 工资中 排名前三 。
+编写解决方案，找出每个部门中 收入高的员工 。
+以 任意顺序 返回结果表。
+
+```sql
+
+输入: 
+Employee 表:
++----+-------+--------+--------------+
+| id | name  | salary | departmentId |
++----+-------+--------+--------------+
+| 1  | Joe   | 85000  | 1            |
+| 2  | Henry | 80000  | 2            |
+| 3  | Sam   | 60000  | 2            |
+| 4  | Max   | 90000  | 1            |
+| 5  | Janet | 69000  | 1            |
+| 6  | Randy | 85000  | 1            |
+| 7  | Will  | 70000  | 1            |
++----+-------+--------+--------------+
+Department  表:
++----+-------+
+| id | name  |
++----+-------+
+| 1  | IT    |
+| 2  | Sales |
++----+-------+
+输出: 
++------------+----------+--------+
+| Department | Employee | Salary |
++------------+----------+--------+
+| IT         | Max      | 90000  |
+| IT         | Joe      | 85000  |
+| IT         | Randy    | 85000  |
+| IT         | Will     | 70000  |
+| Sales      | Henry    | 80000  |
+| Sales      | Sam      | 60000  |
++------------+----------+--------+
+解释:
+在IT部门:
+- Max的工资最高
+- 兰迪和乔都赚取第二高的独特的薪水
+- 威尔的薪水是第三高的
+
+在销售部:
+- 亨利的工资最高
+- 山姆的薪水第二高
+- 没有第三高的工资，因为只有两名员工
+
+
+SELECT Department, Employee, Salary
+FROM (
+    SELECT 
+        d.name Department, 
+        ee.name Employee, 
+        ee.salary Salary, 
+        DENSE_RANK() OVER
+        (
+            PARTITION BY departmentId 
+            ORDER BY salary 
+            DESC
+        ) ranks
+    FROM Employee ee
+    LEFT JOIN Department d
+    ON ee.departmentId = d.id
+) t
+WHERE ranks <= 3
+
+-- 除了用RANK排序函数，本题也能朴素解：
+SELECT
+    d.Name Department, 
+    e1.Name Employee, 
+    e1.Salary Salary
+FROM
+    Employee e1
+    LEFT JOIN Department d 
+    ON e1.DepartmentId = d.Id
+WHERE
+    3 > (
+            SELECT
+                COUNT(DISTINCT e2.Salary)
+            FROM Employee e2
+            WHERE
+                e2.Salary > e1.Salary AND e1.DepartmentId = e2.DepartmentId
+        )
+```
+
+## 正则表达式-空格
+在MySQL中，反斜杠在字符串中是属于转义字符，经过语法解析器解析时会进行一次转义
+在MySQL中，正则表达式也是一个字符串，所以一般正则表达式的空格表示为‘\s’，MySQL中需要为：'\\s'
+
+>例子：
+查询患有 I 类糖尿病的患者 ID （patient_id）、患者姓名（patient_name）以及其患有的所有疾病代码（conditions）。
+I 类糖尿病的代码总是包含前缀 DIAB1 。
+
+```sql
+输入：
+Patients表：
++------------+--------------+--------------+
+| patient_id | patient_name | conditions   |
++------------+--------------+--------------+
+| 1          | Daniel       | YFEV COUGH   |
+| 2          | Alice        |              |
+| 3          | Bob          | DIAB100 MYOP |
+| 4          | George       | ACNE DIAB100 |
+| 5          | Alain        | DIAB201      |
++------------+--------------+--------------+
+输出：
++------------+--------------+--------------+
+| patient_id | patient_name | conditions   |
++------------+--------------+--------------+
+| 3          | Bob          | DIAB100 MYOP |
+| 4          | George       | ACNE DIAB100 | 
++------------+--------------+--------------+
+解释：Bob 和 George 都患有代码以 DIAB1 开头的疾病。
+
+SELECT *
+FROM Patients
+WHERE
+    conditions REGEXP '^DIAB1|\\sDIAB1'
+```
+
+## 删除
+一般的删除写法是：
+```sql
+DELETE FROM t1 WHERE id=xxx
+```
+如果想在join中删除，可以这样：
+```sql
+DELETE t1 
+FROM t1 
+LEFT JOIN t2
+ON t1.id=t2.id
+WHERE t1.id=xxx
+```
+> 例子：
+编写解决方案 删除 所有重复的电子邮件，只保留一个具有最小 id 的唯一电子邮件。
+
+```sql
+输入: 
+Person 表:
++----+------------------+
+| id | email            |
++----+------------------+
+| 1  | john@example.com |
+| 2  | bob@example.com  |
+| 3  | john@example.com |
++----+------------------+
+输出: 
++----+------------------+
+| id | email            |
++----+------------------+
+| 1  | john@example.com |
+| 2  | bob@example.com  |
++----+------------------+
+
+DELETE p1
+FROM Person p1 
+INNER JOIN Person p2
+ON p1.email=p2.email AND p1.id>p2.id
+```
+
+## GROUP_CONCAT
+GROUP_CONCAT()函数将组中的字符串连接成为具有各种选项的单个字符串
+```sql
+GROUP_CONCAT(
+    DISTINCT expression
+    ORDER BY expression
+    SEPARATOR sep
+)
+```
+
+> 例子：
+编写解决方案找出每个日期、销售的不同产品的数量及其名称。
+每个日期的销售产品名称应按词典序排列。
+返回按 sell_date 排序的结果表。
+
+```sql
+输入：
+Activities 表：
++------------+-------------+
+| sell_date  | product     |
++------------+-------------+
+| 2020-05-30 | Headphone   |
+| 2020-06-01 | Pencil      |
+| 2020-06-02 | Mask        |
+| 2020-05-30 | Basketball  |
+| 2020-06-01 | Bible       |
+| 2020-06-02 | Mask        |
+| 2020-05-30 | T-Shirt     |
++------------+-------------+
+输出：
++------------+----------+------------------------------+
+| sell_date  | num_sold | products                     |
++------------+----------+------------------------------+
+| 2020-05-30 | 3        | Basketball,Headphone,T-shirt |
+| 2020-06-01 | 2        | Bible,Pencil                 |
+| 2020-06-02 | 1        | Mask                         |
++------------+----------+------------------------------+
+
+SELECT 
+    sell_date,
+    COUNT(DISTINCT(product)) AS num_sold, 
+    GROUP_CONCAT(
+        DISTINCT product 
+        ORDER BY product 
+        SEPARATOR ','
+    ) AS products
+FROM 
+    Activities
+GROUP BY 
+    sell_date
+ORDER BY 
+    sell_date ASC
+```
+
+
 # LeetCode题目收藏
 ## 1174. 即时食物配送 II
 如果顾客期望的配送日期和下单日期相同，则该订单称为 「即时订单」，否则称为「计划订单」。
@@ -1007,4 +1246,199 @@ FROM
         SELECT COUNT(*) as counts
         FROM Seat
     ) c #座位总数表
+```
+
+## 602. 好友申请 II ：谁有最多的好友
+编写解决方案，找出拥有最多的好友的人和他拥有的好友数目。
+生成的测试用例保证拥有最多好友数目的只有 1 个人。
+
+```sql
+输入：
+RequestAccepted 表：
++--------------+-------------+-------------+
+| requester_id | accepter_id | accept_date |
++--------------+-------------+-------------+
+| 1            | 2           | 2016/06/03  |
+| 1            | 3           | 2016/06/08  |
+| 2            | 3           | 2016/06/08  |
+| 3            | 4           | 2016/06/09  |
++--------------+-------------+-------------+
+输出：
++----+-----+
+| id | num |
++----+-----+
+| 3  | 3   |
++----+-----+
+
+SELECT id, count(*) as num
+from (
+    SELECT requester_id as id from RequestAccepted
+    UNION ALL
+    SELECT accepter_id as id from RequestAccepted
+) as t
+GROUP BY id
+ORDER BY num DESC
+LIMIT 1
+```
+
+## 585. 2016年的投资
+编写解决方案报告 2016 年 (tiv_2016) 所有满足下述条件的投保人的投保金额之和：
+1. 他在 2015 年的投保额 (tiv_2015) 至少跟一个其他投保人在 2015 年的投保额相同。
+2. 他所在的城市必须与其他投保人都不同（也就是说 (lat, lon) 不能跟其他任何一个投保人完全相同）。
+tiv_2016 四舍五入的 两位小数
+```sql
+输入：
+Insurance 表：
++-----+----------+----------+-----+-----+
+| pid | tiv_2015 | tiv_2016 | lat | lon |
++-----+----------+----------+-----+-----+
+| 1   | 10       | 5        | 10  | 10  |
+| 2   | 20       | 20       | 20  | 20  |
+| 3   | 10       | 30       | 20  | 20  |
+| 4   | 10       | 40       | 40  | 40  |
++-----+----------+----------+-----+-----+
+输出：
++----------+
+| tiv_2016 |
++----------+
+| 45.00    |
++----------+
+
+SELECT ROUND(SUM(tiv_2016), 2) as tiv_2016
+FROM Insurance
+WHERE tiv_2015 in (
+    SELECT tiv_2015 
+    FROM Insurance
+    GROUP BY tiv_2015
+    HAVING COUNT(*) > 1
+)
+AND (lat, lon) in (
+    SELECT lat, lon
+    FROM Insurance
+    GROUP BY lat, lon
+    HAVING COUNT(*) = 1 
+)
+
+-- 也可以这样：
+SELECT ROUND(SUM(a.tiv_2016),2) AS TIV_2016
+FROM insurance a
+WHERE EXISTS (
+    SELECT *
+    FROM insurance b 
+    WHERE a.pid<>b.pid AND a.tiv_2015=b.tiv_2015
+)
+AND NOT EXISTS(
+    SELECT *
+    FROM insurance c 
+    WHERE a.pid<>c.pid AND a.lat=c.lat AND a.lon=c.lon
+);
+```
+
+## 176. 第二高的薪水
+查询并返回 Employee 表中第二高的薪水 。如果不存在第二高的薪水，查询应该返回 null(Pandas 则返回 None) 。
+
+```sql
+输入：
+Employee 表：
++----+--------+
+| id | salary |
++----+--------+
+| 1  | 100    |
+| 2  | 200    |
+| 3  | 300    |
++----+--------+
+输出：
++---------------------+
+| SecondHighestSalary |
++---------------------+
+| 200                 |
++---------------------+
+示例 2：
+
+输入：
+Employee 表：
++----+--------+
+| id | salary |
++----+--------+
+| 1  | 100    |
++----+--------+
+输出：
++---------------------+
+| SecondHighestSalary |
++---------------------+
+| null                |
++---------------------+
+
+
+-- 麻烦的是null，可以用临时表的方式解决：
+SELECT
+(
+    SELECT DISTINCT salary
+    FROM Employee
+    ORDER BY salary
+    DESC
+    LIMIT 1,1
+) AS SecondHighestSalary
+
+--或者用IFNULL
+SELECT
+IFNULL(
+    (
+        SELECT DISTINCT salary
+        FROM Employee
+        ORDER BY salary
+        DESC
+        LIMIT 1,1
+    ),
+    null
+) AS SecondHighestSalary
+```
+
+## 1327. 列出指定时间段内所有的下单产品
+写一个解决方案，要求获取在 2020 年 2 月份下单的数量不少于 100 的产品的名字和数目。
+
+```sql
+输入：
+Products 表:
++-------------+-----------------------+------------------+
+| product_id  | product_name          | product_category |
++-------------+-----------------------+------------------+
+| 1           | Leetcode Solutions    | Book             |
+| 2           | Jewels of Stringology | Book             |
+| 3           | HP                    | Laptop           |
+| 4           | Lenovo                | Laptop           |
+| 5           | Leetcode Kit          | T-shirt          |
++-------------+-----------------------+------------------+
+Orders 表:
++--------------+--------------+----------+
+| product_id   | order_date   | unit     |
++--------------+--------------+----------+
+| 1            | 2020-02-05   | 60       |
+| 1            | 2020-02-10   | 70       |
+| 2            | 2020-01-18   | 30       |
+| 2            | 2020-02-11   | 80       |
+| 3            | 2020-02-17   | 2        |
+| 3            | 2020-02-24   | 3        |
+| 4            | 2020-03-01   | 20       |
+| 4            | 2020-03-04   | 30       |
+| 4            | 2020-03-04   | 60       |
+| 5            | 2020-02-25   | 50       |
+| 5            | 2020-02-27   | 50       |
+| 5            | 2020-03-01   | 50       |
++--------------+--------------+----------+
+输出：
++--------------------+---------+
+| product_name       | unit    |
++--------------------+---------+
+| Leetcode Solutions | 130     |
+| Leetcode Kit       | 100     |
++--------------------+---------+
+
+SELECT p.product_name, SUM(o.unit) as unit
+FROM Orders o
+LEFT JOIN Products p
+ON o.product_id=p.product_id
+WHERE DATE_FORMAT(o.order_date, '%Y-%m')='2020-02'
+GROUP BY o.product_id
+HAVING unit>=100
 ```
