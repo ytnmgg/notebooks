@@ -1,4 +1,6 @@
-- [基础](#基础)
+- [原理](#原理)
+  - [mysql 间隙锁](#mysql-间隙锁)
+- [语法](#语法)
   - [select语句where条件group by ,having , order by,limit的顺序及用法](#select语句where条件group-by-having--order-bylimit的顺序及用法)
   - [列值如果有null，不等于要小心，可能不包含](#列值如果有null不等于要小心可能不包含)
   - [distinct](#distinct)
@@ -35,16 +37,53 @@
   - [176. 第二高的薪水](#176-第二高的薪水)
   - [1327. 列出指定时间段内所有的下单产品](#1327-列出指定时间段内所有的下单产品)
 
+# 原理
+## mysql 间隙锁
+    https://dbaplus.cn/news-11-5011-1.html
 
-# 基础
+    https://zhuanlan.zhihu.com/p/356824126
+    https://www.ctyun.cn/zhishi/p-194042
+
+    MySQL在RR隔离级别下引入间隙锁（和行锁组成next-key Lock）来解决数据记录的幻读问题，在RC隔离级别下，通常间隙锁会消失，降级为记录锁，所以在RC隔离级别下能够提高并发写入的性能。
+
+   间隙锁在RC（read-commited）隔离级别下会失效的缘故，也就是说这个唯一值并没有被独占，所以可以进行插入
+   而在RR（repeatable-read）级别中因为是不存在的值，但是通过间隙锁来进行锁定这个，所以会出现阻塞的情况
+
+   select for update，锁不存在的记录：
+      RC级别，本来是要锁记录的，找不到记录，等同不加锁。
+      RR级别，锁期望行的前一行、后一行，之间的间隙
+
+# 语法
 ## select语句where条件group by ,having , order by,limit的顺序及用法
 语句顺序:
-- select 选择的列
-- from 表
-- where 查询的条件
-- group by 分组属性 having 分组过滤的条件
-- order by 排序属性
-- limit 起始记录位置，取记录的条数
+- 手写
+```sql
+SELECT 
+DISTINCT <select_list>
+FROM  <left_table> <join_type>
+JOIN  <right_table> 
+ON <join_condition>
+WHERE  <where_condition>
+GROUP BY  <group_by_list>
+HAVING <having_condition>
+UNION
+ORDER BY <order_by_condition>
+LIMIT <limit_number>
+```
+- 机读
+```SQL
+FROM  <left_table>
+ON <join_condition> <join_type> 
+JOIN  <right_table> 
+WHERE  <where_condition>
+GROUP BY  <group_by_list>
+HAVING <having_condition>
+SELECT
+DISTINCT <select_list>
+UNION
+ORDER BY <order_by_condition>
+LIMIT <limit_number>
+```
 
 ## 列值如果有null，不等于要小心，可能不包含
 
